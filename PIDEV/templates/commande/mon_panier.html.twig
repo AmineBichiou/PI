@@ -1,0 +1,143 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Panier{% endblock %}
+
+{% block body %}
+<div class="container-fluid my-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <div class="card shadow-lg">
+                <div class="row p-2 mt-3 justify-content-between mx-sm-2">
+                    <div class="col">
+                        <p class="text-muted space mb-0 shop">Tunisie</p> 
+                        <p class="text-muted space mb-0 shop">Shop officiel de cultures agricoles </p>   
+                    </div>
+                    <div class="col">
+                        <div class="row justify-content-start">
+                            <div class="col">
+                                <img class="irc_mi img-fluid cursor-pointer" src="https://i.imgur.com/jFQo2lD.png" width="70" height="70">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <img class="irc_mi img-fluid bell" src="https://i.imgur.com/uSHMClk.jpg" width="30" height="30">
+                    </div>
+                </div>
+                
+                <div class="row mx-auto justify-content-center text-center">
+                    <div class="col-12 mt-3">
+                        <nav aria-label="breadcrumb" class="second">
+                            <ol class="breadcrumb indigo lighten-6 first">
+                                <li class="breadcrumb-item font-weight-bold">
+                                    <a class="black-text text-uppercase" href="{{ path('liste-produits') }}">
+                                        <span class="mr-md-3 mr-1">⬅️ Retour à la boutique</span>
+                                    </a>
+                                    <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                                </li>
+                                <li class="breadcrumb-item font-weight-bold"><a class="black-text text-uppercase" href="#">Liste des produits passés en commande</a></li>
+                                <li class="breadcrumb-item font-weight-bold"><a class="black-text text-uppercase active-2" href="#">CHECKOUT</a></li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+
+                <div class="row justify-content-around">
+                    <!-- Section des Commandes -->
+                    <div class="col-md-5">
+                        <div class="card border-0">
+                            <div class="card-header pb-0">
+                                <h2 class="card-title space">Votre Commande</h2>
+                                
+                                <hr class="my-0">
+                            </div>
+                            <div class="card-body">
+                                {% if commandes is empty %}
+                                    <p class="text-center">Votre panier est vide.</p>
+                                {% else %}
+                                    {% set total = 0 %}
+                                    {% for commande in commandes %}
+                                        {% set produitAssocie = commande.produit ?? null %}
+                                        {% if produitAssocie %}
+                                            {% set sousTotal = produitAssocie.prixUnitaire * commande.quantite %}
+                                            {% set total = total + sousTotal %}
+                                            <div class="row justify-content-between align-items-center">
+                                                <div class="col-auto col-md-7">
+                                                    <div class="media flex-column flex-sm-row">
+                                                        <img class="img-fluid" src="{{ asset(commande.produit.urlImageProduit) }}" width="80" height="80">
+                                                        <div class="media-body my-auto">
+                                                            <p class="mb-0"><b>{{ produitAssocie.nom }}</b></p>
+                                                            <!-- Formulaire de modification de quantité -->
+<form action="{{ path('modifier_quantite', {id: commande.id}) }}" method="POST" class="d-flex mt-2">
+    <input type="number" name="quantite" value="{{ commande.quantite }}" min="1" class="form-control w-50">
+    <button type="submit" class="btn btn-warning ms-2">🔄</button>
+</form>
+
+<br>
+                                                            <small class="text-muted">Prix Unitaire : {{ produitAssocie.prixUnitaire }} DT</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="pl-0 flex-sm-col col-auto my-auto">
+                                                    <a href="{{ path('supprimer_commande', {id: commande.id}) }}" class="btn btn-danger">❌</a>
+                                                </div>
+                                            </div>
+                                            <hr class="my-2">
+                                        {% else %}
+                                            <p class="text-danger">Produit non disponible</p>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <div class="row justify-content-between">
+                                        <div class="col-auto"><h4 class="text-muted">Total :</h4></div>
+                                        <div class="col-auto"><h4><b>{{ total }} DT</b></h4></div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Paiement -->
+                    <div class="col-md-5">
+                        <div class="card border-0">
+                            <div class="card-header pb-0">
+                                <h2 class="card-title space">Paiement</h2>
+                                <p class="card-text text-muted mt-4 space">Détails de paiement</p>
+                                <hr class="my-0">
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label class="small text-muted mb-1">Nom sur la carte</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="Votre nom">
+                                </div>
+                                <div class="form-group">
+                                    <label class="small text-muted mb-1">Numéro de carte</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="0000 0000 0000 0000">
+                                </div>
+                                <div class="row no-gutters">
+                                    <div class="col-sm-6 pr-sm-2">
+                                        <div class="form-group">
+                                            <label class="small text-muted mb-1">Date d'expiration</label>
+                                            <input type="text" class="form-control form-control-sm" placeholder="MM/AA">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label class="small text-muted mb-1">CVC</label>
+                                            <input type="text" class="form-control form-control-sm" placeholder="123">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-md-5">
+                                    <div class="col">
+                                        <button type="button" class="btn btn-lg btn-block btn-primary">💳 Passer la commande</button>
+                                    </div>
+                                </div>    
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

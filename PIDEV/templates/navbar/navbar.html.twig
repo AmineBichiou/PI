@@ -1,8 +1,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accueil - Agriplanner</title>
+    <title>{% block title %}Agriplanner{% endblock %}</title>
     <link rel="stylesheet" href="{{ asset('css/homepage.css') }}">
+    {% block stylesheets %}{% endblock %}
 </head>
 
 
@@ -14,7 +15,7 @@
         <div>
             <ul>
                 <li><a href="{{ path('home') }}">Accueil</a></li>
-                <li><a href="{{ path('produit') }}">Produit</a></li>
+                <li><a href="{{ path('liste_produits') }}">Produit</a></li>
                 <li>Services</li>
                 <li>Comment ça fonctionne?</li>
                 <li>Questions et réponses</li>

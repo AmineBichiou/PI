@@ -1,4 +1,4 @@
-# config/routes.yaml
+
 home:
     path: /
     controller: App\Controller\HomePageController::home
@@ -7,6 +7,22 @@ app_loginpage:
     path: /login
     controller: App\Controller\LoginPageController::index
 
-produit:
+ajout_produit:
+    path: /produit/ajout
+    controller: App\Controller\ProductsController::ajouterProduit
+
+liste_produits:
     path: /produit
-    controller: App\Controller\HomePageController::produit
+    controller: App\Controller\ProductsController::listeProduits
+
+edit-produit:
+    path: /produit/edit/{id}
+    controller: App\Controller\ProductsController::editProduit
+
+delete-produit:
+    path: /produit/delete/{id}
+    controller: App\Controller\ProductsController::deleteProduit
+
+controllers:
+    resource: ../src/Controller/
+    type: attribute

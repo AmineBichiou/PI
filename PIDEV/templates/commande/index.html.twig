@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %} Mon Panier {% endblock %}
+
+{% block body %}
+    <h1>Mon Panier</h1>
+
+    {% if commandes is empty %}
+        <p>Votre panier est vide.</p>
+    {% else %}
+        <table border="1">
+            <tr>
+                <th>ID Produit</th>
+                <th>Quantité</th>
+                <th>Action</th>
+            </tr>
+            {% for commande in commandes %}
+                <tr>
+                    <td>{{ commande.produitId }}</td>
+                    <td>{{ commande.quantite }}</td>
+                    <td>
+                        <a href="{{ path('supprimer_commande', {'id': commande.id}) }}">❌ Supprimer</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+
+    <h2>Ajouter un produit</h2>
+    <form method="GET" action="{{ path('ajout_commande', {'produitId': 1, 'quantite': 1}) }}">
+        <label for="produitId">ID du Produit :</label>
+        <input type="number" id="produitId" name="produitId" required>
+
+        <label for="quantite">Quantité :</label>
+        <input type="number" id="quantite" name="quantite" value="1" required>
+
+        <button type="submit">Ajouter</button>
+    </form>
+{% endblock %}
