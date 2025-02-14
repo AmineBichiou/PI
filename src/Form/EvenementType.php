@@ -87,7 +87,7 @@ class EvenementType extends AbstractType
                 'class' => Region::class,
                 'choice_label' => 'nom',
                 'multiple' => true,
-                'expanded' => false, // ou true pour des cases à cocher
+                'expanded' => true, // ou true pour des cases à cocher
                 'attr' => ['class' => 'form-control'],
             ]);
     }
