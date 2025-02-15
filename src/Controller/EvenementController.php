@@ -29,20 +29,7 @@ final class EvenementController extends AbstractController
         ]);
     }    
 
-    
-    #[Route('/evenements', name: 'app_evenement_liste')]
-public function liste(EntityManagerInterface $entityManager): Response
-{
-    // Récupérer la liste des événements depuis la base de données
-    $evenements = $entityManager->getRepository(Evenement::class)->findAll();
-
-    // Passer les événements au template
-    return $this->render('evenement/liste.html.twig', [
-        'evenements' => $evenements,
-    ]);
-}
-
-// Voir un événement
+    // Voir un événement
 #[Route('/evenement/{id}', name: 'app_evenement_voir')]
 public function voir(Evenement $evenement): Response
 {
@@ -51,11 +38,7 @@ public function voir(Evenement $evenement): Response
     ]);
 }
 
-
-
-
-
-    // Ajouter un événement avec stockage de la photo dans le répertoire
+// Ajouter un événement avec stockage de la photo dans le répertoire
     #[Route('/evenement/ajout', name: 'app_evenement_ajout')]
     public function ajout(Request $request, EntityManagerInterface $entityManager, ParameterBagInterface $params): Response
 {
@@ -142,19 +125,14 @@ public function voir(Evenement $evenement): Response
         return $this->redirectToRoute('app_evenement');
     }
 
-//afficher client 
-    #[Route('/public/evenements', name: 'app_evenements_front')]
-    public function afficherEvenementsFront(EvenementRepository $evenementRepository): Response
-    {
-        $evenements = $evenementRepository->findAll();
-
-        return $this->render('evenement/evenements_front.html.twig', [
-            'evenements' => $evenements,
-        ]);
-    }
-
-    
-}
 
 
-
+// front
+#[Route('/evenements/liste', name: 'app_evenements_liste')]
+public function listEvenements(EvenementRepository $evenementRepository): Response
+{
+    $evenements = $evenementRepository->findAll();
+    return $this->render('evenement/liste.html.twig', [
+        'evenements' => $evenements,
+    ]);
+}}
