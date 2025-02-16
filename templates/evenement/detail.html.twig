@@ -103,100 +103,93 @@
 
     <!-- Single Page Header Start -->
     <div class="container-fluid page-header py-5">
-        <h1 class="text-center text-white display-6">Evénements</h1>
+        <h1 class="text-center text-white display-6">Détails d'événement</h1>
     </div>
     <!-- Single Page Header End -->
 
-    <!-- Fruits Shop Start -->
-    <div class="container-fluid fruite py-5">
+    <!-- Single Product Start -->
+    <div class="container-fluid py-5 mt-5">
         <div class="container py-5">
-            <!-- Barre de filtrage en haut à droite -->
-            <div class="d-flex justify-content-end mb-4">
-                <div class="bg-light ps-3 py-3 rounded d-flex justify-content-between">
-                    <label for="fruits" class="me-3">Trier par :</label>
-                    <select id="fruits" name="fruitlist" class="border-0 form-select-sm bg-light" form="fruitform">
-                        <option value="volvo">Par défaut</option>
-                        <option value="saab">Popularité</option>
-                        <option value="opel">Organique</option>
-                        <option value="audi">Fantastique</option>
-                    </select>
+            <div class="row g-4 mb-5">
+                <div class="col-lg-8 col-xl-9">
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <div class="border rounded">
+                                {% if evenement.photo %}
+                                    <img src="{{ asset('uploads/photos/' ~ evenement.photo) }}" class="img-fluid rounded" alt="Photo de l'événement {{ evenement.titre }}">
+                                {% else %}
+                                    <img src="img/single-item.jpg" class="img-fluid rounded" alt="Image par défaut">
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <h4 class="fw-bold mb-3">{{ evenement.titre }}</h4>
+                            <p class="mb-3"><strong>Description :</strong> {{ evenement.description }}</p>
+                            <p class="mb-3"><strong>Type :</strong> {{ evenement.type.label() }}</p>
+                            <p class="mb-3"><strong>Statut :</strong> {{ evenement.statut.label() }}</p>
+                            <p class="mb-3"><strong>Date de début :</strong> {{ evenement.dateDebut|date('d/m/Y H:i') }}</p>
+                            <p class="mb-3"><strong>Date de fin :</strong> {{ evenement.dateFin|date('d/m/Y H:i') }}</p>
+                            <div class="mt-4">
+                                <strong>Régions associées :</strong>
+                                <ul class="list-group">
+                                    {% for evenementRegion in evenement.evenementRegions %}
+                                        <li class="list-group-item">
+                                            {{ evenementRegion.region.nom }} ({{ evenementRegion.region.ville }})
+                                        </li>
+                                    {% else %}
+                                        <li class="list-group-item">Aucune région associée.</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-xl-3">
+                    <div class="row g-4 fruite">
+                        <div class="col-lg-12">
+                            <div class="input-group w-100 mx-auto d-flex mb-4">
+                                <input type="search" class="form-control p-3" placeholder="keywords" aria-describedby="search-icon-1">
+                                <span id="search-icon-1" class="input-group-text p-3"><i class="fa fa-search"></i></span>
+                            </div>
+                            <div class="mb-4">
+                                <h4>Categories</h4>
+                                <ul class="list-unstyled fruite-categorie">
+                                    <li>
+                                        <div class="d-flex justify-content-between fruite-name">
+                                            <a href="#"><i class="fas fa-apple-alt me-2"></i>Foire</a>
+                                            <span>(3)</span>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="d-flex justify-content-between fruite-name">
+                                            <a href="#"><i class="fas fa-apple-alt me-2"></i>Conférence</a>
+                                            <span>(5)</span>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="d-flex justify-content-between fruite-name">
+                                            <a href="#"><i class="fas fa-apple-alt me-2"></i>Formation</a>
+                                            <span>(2)</span>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="row g-4">
-                <!-- Sidebar (zone de recherche et catégories) -->
-                <div class="col-lg-3">
-                    <div class="sidebar bg-light p-4 rounded">
-                        <!-- Barre de recherche -->
-                        <div class="input-group w-100 mb-4">
-                            <input type="search" class="form-control p-3" placeholder="Rechercher..." aria-describedby="search-icon-1">
-                            <span id="search-icon-1" class="input-group-text p-3"><i class="fa fa-search"></i></span>
-                        </div>
-
-                        <!-- Catégories -->
-                        <div class="mb-3">
-                            <h4>Catégories</h4>
-                            <ul class="list-unstyled fruite-categorie">
-                                <li>
-                                    <div class="d-flex justify-content-between fruite-name">
-                                        <a href="#"><i class="fas fa-apple-alt me-2"></i>Foire</a>
-                                        <span>(3)</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="d-flex justify-content-between fruite-name">
-                                        <a href="#"><i class="fas fa-apple-alt me-2"></i>Formation</a>
-                                        <span>(5)</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="d-flex justify-content-between fruite-name">
-                                        <a href="#"><i class="fas fa-apple-alt me-2"></i>Conférence</a>
-                                        <span>(2)</span>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <!-- Bannière -->
-                        <div class="position-relative">
-                            <img src="img/banner-fruits.jpg" class="img-fluid w-100 rounded" alt="">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Zone centrale agrandie -->
-                <div class="col-lg-9">
-                    <div class="event-grid">
-                        {% for evenement in evenements %}
-                        <div class="rounded position-relative fruite-item">
-                            <!-- Photo de l'événement -->
-                            <div class="fruite-img position-relative">
-                                <img src="{{ asset('uploads/photos/' ~ evenement.photo) }}" class="event-image" alt="{{ evenement.titre }}">
-                            </div>
-
-                            <!-- Nom de l'événement, date et bouton "Voir détails" -->
-                            <div class="p-4 border border-secondary border-top-0 rounded-bottom">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <!-- Nom de l'événement -->
-                                    <h4 class="event-title mb-0">{{ evenement.titre }}</h4>
-                                    <!-- Date de début et bouton "Voir détails" -->
-                                    <div class="d-flex align-items-center">
-                                        <p class="text-primary mb-0 me-3">{{ evenement.dateDebut|date('d/m/Y H:i') }}</p>
-                                      <a href="{{ path('evenement_detail', {'id': evenement.id}) }}" class="btn btn-primary rounded-pill px-3">Voir détails</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
+            <div class="mt-4">
+                <a href="{{ path('app_evenement') }}" class="btn btn-primary">
+                    Retour à la liste des événements
+                </a>
             </div>
         </div>
     </div>
-    <!-- Fruits Shop End -->
+    <!-- Single Product End -->
 
-    <!-- Footer Start -->
+    
+
+        <!-- Footer Start -->
     <div class="container-fluid bg-dark text-white-50 footer pt-5 mt-5">
         <div class="container py-5">
             <div class="pb-4 mb-4" style="border-bottom: 1px solid rgba(226, 175, 24, 0.5);">

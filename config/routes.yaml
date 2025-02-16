@@ -58,3 +58,10 @@ app_region_supprimer:
 app_evenements_liste:
     path: /evenements
     controller: App\Controller\EvenementController::listEvenements
+
+
+evenement_detail:
+    path: /evenements/{id}
+    controller: App\Controller\EvenementController::detail
+    requirements:
+        id: '\d+'  # Cela indique que l'ID doit être un nombre entier.
