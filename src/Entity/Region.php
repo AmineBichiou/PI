@@ -7,8 +7,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
-
-
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: RegionRepository::class)]
 class Region
@@ -19,12 +18,30 @@ class Region
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Le nom de la région ne peut pas être vide.")]
+    #[Assert\Length(max: 100, maxMessage: "Le nom de la région ne peut pas dépasser 100 caractères.")]
+    #[Assert\Regex(
+        pattern: "/^[a-zA-Z][a-zA-Z0-9\s\-]*$/",
+        message: "Le nom de la région doit commencer par une lettre et ne contenir que des lettres, des chiffres, des espaces et des tirets."
+    )]
     private ?string $nom = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "La ville ne peut pas être vide.")]
+    #[Assert\Length(max: 50, maxMessage: "Le nom de la ville ne peut pas dépasser 50 caractères.")]
+    #[Assert\Regex(
+        pattern: "/^[a-zA-Z][a-zA-Z\s\-]*$/",
+        message: "La ville doit commencer par une lettre et ne peut contenir que des lettres, des espaces et des tirets."
+    )]
     private ?string $ville = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "La description de la région ne peut pas être vide.")]
+    #[Assert\Length(max: 500, maxMessage: "La description ne peut pas dépasser 500 caractères.")]
+    #[Assert\Regex(
+        pattern: "/^[a-zA-Z0-9\s\.,\-]*$/",
+        message: "La description ne peut contenir que des lettres, des chiffres, des espaces, des virgules, des points et des tirets."
+    )]
     private ?string $description = null;
 
     #[ORM\OneToMany(mappedBy: 'region', targetEntity: EvenementRegion::class, cascade: ['persist', 'remove'])]

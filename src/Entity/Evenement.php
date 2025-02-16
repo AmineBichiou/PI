@@ -20,10 +20,15 @@ class Evenement
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le titre est obligatoire.')]
+    #[Assert\Length(max: 100, maxMessage: 'Le titre ne peut pas dépasser 100 caractères.')]
     private ?string $titre = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $description = null;
+    #[ORM\Column(type: Types::TEXT)]
+#[Assert\NotBlank(message: 'La description est obligatoire.')]
+#[Assert\Length(max: 1000, maxMessage: 'La description ne peut pas dépasser 1000 caractères.')]
+private ?string $description = null;
+
 
     #[ORM\Column(length: 20)]
     private ?string $type = null;
@@ -43,6 +48,7 @@ class Evenement
     private ?string $photo = null;
 
     #[ORM\OneToMany(mappedBy: 'evenement', targetEntity: EvenementRegion::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[Assert\Count(min: 1, minMessage: 'Vous devez sélectionner au moins une région.')]
     private Collection $evenementRegions;
 
     public function __construct()
@@ -196,3 +202,5 @@ class Evenement
         return $this;
     }
 }
+
+
