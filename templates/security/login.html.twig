@@ -3,10 +3,17 @@
 {% block title %}Connexion{% endblock %}
 {% block footer %}{% endblock %}
 {% block body %}
+    <style>
+        /* Adding a background image */
+        body {
+            background-image: url('images/bck2.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
+
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    <header>
-        <img src="{{ asset('images/log.png') }}" alt="Logo" style="height: 50px;">
-    </header>
+
 
     <div class="container mt-4">
         <div class="card mx-auto" style="max-width: 400px;">

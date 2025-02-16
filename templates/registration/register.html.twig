@@ -3,6 +3,15 @@
 {% block title %}Inscription{% endblock %}
 {% block footer %}{% endblock %}
 {% block body %}
+    <style>
+        /* Adding a background image */
+        body {
+            background-image: url('images/bck1.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
+
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     {% for flash_error in app.flashes('verify_email_error') %}
         <div class="alert alert-danger" role="alert">{{ flash_error }}</div>
