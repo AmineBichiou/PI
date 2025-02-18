@@ -17,7 +17,7 @@ class CommandeFinaliseeRepository extends ServiceEntityRepository
     }
 
     /**
-     * Récupère toutes les commandes finalisées triées par date (les plus récentes en premier)
+     * 
      */
     public function findAllOrderedByDate(): array
     {
