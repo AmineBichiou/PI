@@ -26,7 +26,6 @@ class StockController extends AbstractController
         ]);
     }
 
-// src/Controller/StockController.php
 public function new(Request $request, EntityManagerInterface $entityManager): Response
 {
     $stock = new Stock();
@@ -50,7 +49,28 @@ public function new(Request $request, EntityManagerInterface $entityManager): Re
         'form' => $form->createView(),
     ]);
 }
-// src/Controller/StockController.php
+
+#[Route('/stock/increase/{id}', name: 'app_stock_increase', methods: ['GET', 'POST'])]
+public function increaseStock(Request $request, Stock $stock, EntityManagerInterface $entityManager): Response
+{
+    if ($request->isMethod('POST')) {
+        $quantityToAdd = (int) $request->request->get('quantity');
+
+        if ($quantityToAdd > 0) {
+            $stock->setQuantite($stock->getQuantite() + $quantityToAdd);
+            $entityManager->flush();
+            $this->addFlash('success', 'Le stock a été augmenté avec succès.');
+        } else {
+            $this->addFlash('error', 'La quantité doit être un nombre positif.');
+        }
+
+        return $this->redirectToRoute('app_stock_index');
+    }
+
+    return $this->render('stock/increase.html.twig', [
+        'stock' => $stock,
+    ]);
+}
 #[Route('/{id}/edit', name: 'app_stock_edit', methods: ['GET', 'POST'])]
 public function edit(Request $request, Stock $stock, EntityManagerInterface $entityManager): Response
 {

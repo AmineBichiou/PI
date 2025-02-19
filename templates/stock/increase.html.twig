@@ -1,10 +1,9 @@
-{# templates/dashboard/index.html.twig #}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="utf-8">
-    <title>Dashboard - Gestion des Stocks</title>
+    <title> Ajoute quantiter</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="" name="keywords">
     <meta content="" name="description">
@@ -34,7 +33,7 @@
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
+
 
     {% block stylesheets %}
     <style>
@@ -195,127 +194,31 @@
     </style>
     {% endblock %}
 
-    {% block javascripts %}
-        {% block importmap %}{{ importmap('app') }}{% endblock %}
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                let sidebarLinks = document.querySelectorAll(".sidebar a");
-                let currentPath = window.location.pathname;
-                
-                sidebarLinks.forEach(link => {
-                    if (link.getAttribute("href") === currentPath) {
-                        link.classList.add("active");
-                    }
-                    link.addEventListener("click", function() {
-                        sidebarLinks.forEach(l => l.classList.remove("selected"));
-                        this.classList.add("selected");
-                    });
-                });
-            });
-        </script>
-    {% endblock %}
-</head>
+  </head>
 {% block body %}
 {% include 'backoffice/sidebar.html.twig' %}
 <main>
-<div class="main-content">
-  <div style="display: grid; height: 10vh; align-items: end;">
-    <h1 class="text-3xl font-bold mb-6">Gestion des Stocks</h1>
-</div>
+  <div class="main-content">
+    <div style="display: grid; height: 10vh; align-items: end;">
+      <h1 class="text-3xl font-bold mb-6">Gestion des Stocks</h1>
+  </div>
+    <div class="container">
+        <h1>Augmenter le stock</h1>
 
+        <p>Produit : {{ stock.produit }}</p>
+        <p>Quantité actuelle : {{ stock.quantite }}</p>
 
-    <!-- Bouton pour ajouter un stock -->
-    <a href="{{ path('app_stock_new') }}" class="btn btn-primary mb-4">
-        <i class="fas fa-plus mr-2"></i>Ajouter un stock
-    </a>
+        <form method="post">
+            <div class="form-group">
+                <label for="quantity">Quantité à ajouter :</label>
+                <input type="number" id="quantity" name="quantity" class="form-control" min="1" required>
+            </div>
 
-    <!-- Notifications flash -->
-    {% for message in app.flashes('success') %}
-        <div class="alert alert-success mb-4">
-            {{ message }}
-        </div>
-    {% endfor %}
-
-    <!-- Tableau des stocks -->
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
-        <table id="stock-table" class="table table-striped table-hover">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th>ID</th>
-                    <th>Produit</th>
-                    <th>Image</th>
-                    <th>Quantité</th>
-                    <th>Date Entrée</th>
-                    <th>Date Sortie</th>
-                    <th>Nom d'entrepot</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for stock in stocks %}
-                <tr>
-                    <td>{{ stock.id }}</td>
-                    <td>{{ stock.produit }}</td>
-                    
-                      <td>
-                        {% if stock.produit.urlImageProduit %}
-                            <img src="{{ asset(stock.produit.urlImageProduit) }}" alt="Image du produit" style="max-width: 100px; height: auto;">
-                        {% else %}
-                            <span>Aucune image disponible</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ stock.quantite }}</td>
-                    <td>{{ stock.dateEntree|date('d/m/Y H:i') }}</td>
-                    <td>{{ stock.dateSortie ? stock.dateSortie|date('d/m/Y H:i') : 'N/A' }}</td>
-                    <td>
-                        {% for entrepot in stock.entrepots %}
-                            {{ entrepot.nom }}{% if not loop.last %}, {% endif %}
-                        {% endfor %}
-                    </td>
-                  <td>
-    <div class="d-flex gap-2">
-        <a href="{{ path('app_stock_edit', { id: stock.id }) }}" class="btn btn-sm btn-warning">
-            <i class="fas fa-edit"></i> 
-        </a>
-        <a href="{{ path('app_stock_increase', { id: stock.id }) }}" class="btn btn-sm btn-info">
-          <i class="fas fa-plus"></i> 
-      </a>
-
-      
-        <form action="{{ path('app_stock_delete', { id: stock.id }) }}" method="post" class="d-inline">
-            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ stock.id) }}">
-            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce stock ?')">
-                <i class="fas fa-trash"></i> 
+            <button type="submit" class="btn btn-primary mt-3">
+                <i class="fas fa-plus"></i> Augmenter
             </button>
         </form>
     </div>
-</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    
-
-    <!-- Pagination (si vous utilisez KnpPaginatorBundle) -->
-    <div class="pagination mt-4">
-        {{ knp_pagination_render(stocks) }}
-    </div>
+    </main>
 </div>
-</main>
-<!-- DataTables Script -->
-<script>
-    $(document).ready(function() {
-        $('#stock-table').DataTable({
-            paging: false, // Désactive la pagination de DataTables
-            searching: false, 
-            ordering: true, // Active le tri
-            info: false, // Désactive l'affichage des informations
-            responsive: true, // Active la responsivité
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/fr-FR.json' // Traduction en français
-            }
-        });
-    });
-</script>
 {% endblock %}

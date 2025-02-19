@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 use App\Validator\Constraints\DateEntreeConstraint;
+use App\Validator\Constraints\DateSortieConstraint;
 
 #[ORM\Entity(repositoryClass: StockRepository::class)]
 class Stock
@@ -37,6 +38,7 @@ class Stock
     
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[DateSortieConstraint] 
     private ?\DateTimeInterface $date_sortie = null;
 
     #[ORM\ManyToMany(targetEntity: Fournisseur::class, mappedBy: 'stocks')]
