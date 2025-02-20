@@ -230,6 +230,7 @@
 {% include 'backoffice/sidebar.html.twig' %}
 <main>
 <div class="main-content">
+  
     <div class="container-fluid p-4">
         <div class="card shadow">
             <div class="card-header bg-primary text-white py-3">
@@ -239,6 +240,9 @@
                 <a href="{{ path('app_entrepot_new') }}" class="btn btn-primary mb-4">
                     <i class="fas fa-plus mr-2"></i>Ajouter un entrepôt
                 </a>
+                <div class="mb-4">
+                  <input type="text" id="stock-search" class="form-control" placeholder="Rechercher un stock...">
+              </div>
 
                 {% for message in app.flashes('success') %}
                     <div class="alert alert-success mb-4">
@@ -285,5 +289,35 @@
         </div>
     </div>
 </div>
+  {% block javascripts %}
+        <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+        <script>
+          $(document).ready(function () {
+            // Initialisation de DataTables avec la recherche activée
+            var table = $('#entrepotTable').DataTable({
+                "paging": true,
+                "ordering": true,
+                "info": true,
+                "language": {
+                    "search": "Rechercher :",
+                    "lengthMenu": "Afficher _MENU_ entrées",
+                    "info": "Affichage de _START_ à _END_ sur _TOTAL_ entrées",
+                    "paginate": {
+                        "first": "Premier",
+                        "last": "Dernier",
+                        "next": "Suivant",
+                        "previous": "Précédent"
+                    }
+                }
+            });
+
+            // Ajout de la recherche personnalisée
+            $('#stock-search').on('keyup', function () {
+                table.search(this.value).draw();
+            });
+        });
+      </script>
+          {% endblock %}
+
 </main>
 {% endblock %}
