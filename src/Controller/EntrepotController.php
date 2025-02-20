@@ -26,34 +26,33 @@ class EntrepotController extends AbstractController
     }
 
     // Affiche le formulaire de création d'un nouvel entrepôt
-    #[Route('/new', name: 'app_entrepot_new', methods: ['GET', 'POST'])]
+    #[Route('/entrepot/new', name: 'app_entrepot_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $entrepot = new Entrepot();
         $form = $this->createForm(EntrepotType::class, $entrepot);
-    
         $form->handleRequest($request);
     
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($entrepot);
-            $entityManager->flush();
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                // Le formulaire est valide
+                $entityManager->persist($entrepot);
+                $entityManager->flush();
     
-            $this->addFlash('success', 'L\'entrepôt a été créé avec succès.');
-            return $this->redirectToRoute('app_entrepot_index');
-        }
-    
-        // Récupérer les erreurs de validation
-        $errors = [];
-        foreach ($form->getErrors(true) as $error) {
-            $errors[] = $error->getMessage();
+                $this->addFlash('success', 'L\'entrepôt a été créé avec succès.');
+                return $this->redirectToRoute('app_entrepot_index');
+            } else {
+                // Le formulaire n'est pas valide
+                foreach ($form->getErrors(true) as $error) {
+                    $this->addFlash('error', $error->getMessage());
+                }
+            }
         }
     
         return $this->render('entrepot/new.html.twig', [
             'form' => $form->createView(),
-            'errors' => $errors, // Transmettre les erreurs au template
         ]);
-    }
-          #[Route('/{id}', name: 'app_entrepot_show', methods: ['GET'])]
+    }      #[Route('/{id}', name: 'app_entrepot_show', methods: ['GET'])]
     public function show(Entrepot $entrepot): Response
     {
         return $this->render('entrepot/show.html.twig', [
