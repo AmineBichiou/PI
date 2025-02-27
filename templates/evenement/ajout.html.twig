@@ -13,7 +13,7 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Raleway:wght@600;800&display=swap"
       rel="stylesheet"
-    />
+    />               
 
     <!-- Icon Font Stylesheet -->
     <link
@@ -45,6 +45,9 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
+
+    <!-- Ajouter le CSS de Select2 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 
     {% block stylesheets %}
     <style>
@@ -93,6 +96,7 @@
         background-color: #eeeeee;
         min-height: 100vh;
       }
+      
     </style>
     {% endblock %}
   </head>
@@ -105,106 +109,89 @@
             <div class="card">
               <div
                 class="card-header text-center d-flex align-items-center justify-content-center"
-                style="
-                  background-color: #50aa54;
-                  color: white;
-                  font-size: 24px;
-                  font-weight: bold;
-                  height: 100px;
-                "
+                style="background-color: #50aa54; color: white; font-size: 24px; font-weight: bold; height: 100px;"
               >
                 Créer événement
               </div>
               <div class="card-body">
                 {% for message in app.flashes('success') %}
                 <div class="alert alert-success">{{ message }}</div>
-                {% endfor %} {% for message in app.flashes('error') %}
+                {% endfor %}
+                {% for message in app.flashes('error') %}
                 <div class="alert alert-danger">{{ message }}</div>
                 {% endfor %}
                 {{ form_start(form, {'attr': {'class': 'form-horizontal', 'novalidate': 'novalidate'}}) }}
 
                 <div class="form-group">
-                  {{ form_label(form.titre, "Titre de l'événement", {'label_attr': {'class': 'form-label'
-
-
-                  }}) }}
-                  {{ form_widget(form.titre, {'attr': {'class': 'form-control'
-
-
-                  }}) }}
+                  {{ form_label(form.titre, "Titre de l'événement", {'label_attr': {'class': 'form-label'}}) }}
+                  {{ form_widget(form.titre, {'attr': {'class': 'form-control'}}) }}
                   {{ form_errors(form.titre) }}
                 </div>
 
                 <div class="form-group">
-                  {{ form_label(form.description, "Description", {'label_attr': {'class': 'form-label'
-
-
-                  }}) }}
-                  {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 5
-
-
-                  }}) }}
+                  {{ form_label(form.description, "Description", {'label_attr': {'class': 'form-label'}}) }}
+                  {{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
                   {{ form_errors(form.description) }}
                 </div>
 
                 <div class="form-group">
-                  {{ form_label(form.type, "Type d'événement", {'label_attr': {'class': 'form-label'
-
-
-                  }}) }}
-                  {{ form_widget(form.type, {'attr': {'class': 'form-control'}})
-                  }}
+                  {{ form_label(form.type, "Type d'événement", {'label_attr': {'class': 'form-label'}}) }}
+                  {{ form_widget(form.type, {'attr': {'class': 'form-control'}}) }}
                   {{ form_errors(form.type) }}
                 </div>
 
                 <div class="form-group">
-                  {{ form_label(form.statut, "Statut de l'événement", {'label_attr': {'class': 'form-label'
-
-
-                  }}) }}
-                  {{ form_widget(form.statut, {'attr': {'class': 'form-control'
-
-
-                  }}) }}
+                  {{ form_label(form.statut, "Statut", {'label_attr': {'class': 'form-label'}}) }}
+                  {{ form_widget(form.statut, {'attr': {'class': 'form-control'}}) }}
                   {{ form_errors(form.statut) }}
                 </div>
 
                 <div class="form-group">
-                  {{ form_label(form.dateDebut, "Date de début", {'label_attr': {'class': 'form-label'
-
-
-                  }}) }}
-                  {{ form_widget(form.dateDebut, {'attr': {'class': 'form-control'
-
-
-                  }}) }}
+                  {{ form_label(form.dateDebut, "Date de début", {'label_attr': {'class': 'form-label'}}) }}
+                  {{ form_widget(form.dateDebut, {'attr': {'class': 'form-control'}}) }}
                   {{ form_errors(form.dateDebut) }}
                 </div>
 
                 <div class="form-group">
-                  {{ form_label(form.dateFin, "Date de fin", {'label_attr': {'class': 'form-label'
-
-
-                  }}) }}
-                  {{ form_widget(form.dateFin, {'attr': {'class': 'form-control'
-
-
-                  }}) }}
+                  {{ form_label(form.dateFin, "Date de fin", {'label_attr': {'class': 'form-label'}}) }}
+                  {{ form_widget(form.dateFin, {'attr': {'class': 'form-control'}}) }}
                   {{ form_errors(form.dateFin) }}
                 </div>
 
                 <div class="form-group">
-     {{ form_widget(form) }}
-    <a href="{{ path('app_evenement') }}" class="btn btn-secondary ml-2">Retour à la liste</a>
-</div>
+                  {{ form_label(form.photoFile, "Photo de l'événement", {'label_attr': {'class': 'form-label'}}) }}
+                  {{ form_widget(form.photoFile, {'attr': {'class': 'form-control'}}) }}
+                  {{ form_errors(form.photoFile) }}
+                </div>
+
+                <div class="form-group">
+                  {{ form_label(form.regions, "Régions", {'label_attr': {'class': 'form-label'}}) }}
+                  {{ form_widget(form.regions, {'attr': {'class': 'form-control select2'}}) }}
+                  {{ form_errors(form.regions) }}
+                </div>
+
+                <div class="form-group text-center">
+                  {{ form_widget(form.save, {'attr': {'class': 'btn btn-primary btn-lg btn-block'}}) }}
+                </div>
 
                 {{ form_end(form) }}
-               
               </div>
             </div>
           </div>
         </div>
       </div>
     </main>
+
+    <!-- Ajouter le JavaScript de Select2 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        $('.select2').select2({
+          placeholder: "Choisissez une ou plusieurs régions",
+          allowClear: true
+        });
+      });
+    </script>
   </body>
 </html>

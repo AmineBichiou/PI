@@ -16,7 +16,6 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Validator\Constraints\File;
-
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 class EvenementType extends AbstractType
@@ -88,11 +87,11 @@ class EvenementType extends AbstractType
                 'label' => 'Régions',
                 'class' => Region::class,
                 'choice_label' => 'nom',
-                'multiple' => true,
-                'expanded' => true, // ou true pour des cases à cocher
-                'attr' => ['class' => 'form-control'],
+                'multiple' => true,  // Autorise la sélection multiple
+                'expanded' => false, // Utilise une liste déroulante (non des cases à cocher)
+                'attr' => ['class' => 'form-control select2'],
             ])
-            ->add('save',  SubmitType::class, [
+            ->add('save', SubmitType::class, [
                 'label' => 'Enregistrer',
                 'attr' => ['class' => 'btn btn-primary'],
             ]);

@@ -40,17 +40,6 @@
       .navbar-nav .nav-link:hover {
         color: #000000;
       }
-      .navbar .nav-item {
-        display: flex;
-        align-items: center;
-      }
-      .navbar .nav-item i {
-        margin-right: 10px;
-        color: #d1d1d1;
-      }
-      .navbar .nav-item:hover i {
-        color: #000000;
-      }
       .sidebar {
         height: 100vh;
         width: 250px;
@@ -124,6 +113,14 @@
       .sidebar .nav-item i {
         margin-right: 10px;
       }
+
+      /* Style for form error messages */
+      .form-error {
+        color: #ff0000;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        padding-left: 5px;
+      }
     </style>
     {% endblock %}
   </head>
@@ -133,17 +130,42 @@
       {% block body %}
       <div class="container mt-4">
         <h1 class="mb-4">Ajouter une région</h1>
+        <div class="card-body">
+          
+          {{ form_start(form, {'attr': {'class': 'form', 'novalidate': 'novalidate'}}) }}
+          
+          <div class="form-group">
+            {{ form_label(form.nom) }}
+            {{ form_widget(form.nom) }}
+            <div class="form-error">
+              {{ form_errors(form.nom) }}
+            </div>
+          </div>
 
-        {{ form_start(form) }}
-        {{ form_row(form.nom) }}
-        {{ form_row(form.ville) }}
-        {{ form_row(form.description) }}
-        <button type="submit" class="btn btn-primary">Ajouter</button>
-        {{ form_end(form) }}
+          <div class="form-group">
+            {{ form_label(form.ville) }}
+            {{ form_widget(form.ville) }}
+            <div class="form-error">
+              {{ form_errors(form.ville) }}
+            </div>
+          </div>
 
-        <a href="{{ path('app_region') }}" class="btn btn-secondary mt-3">
-          Retour à la liste
-        </a>
+          <div class="form-group">
+            {{ form_label(form.description) }}
+            {{ form_widget(form.description) }}
+            <div class="form-error">
+              {{ form_errors(form.description) }}
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Ajouter</button>
+          
+          {{ form_end(form) }}
+
+          <a href="{{ path('app_region') }}" class="btn btn-secondary mt-3">
+            Retour à la liste
+          </a>
+        </div>
       </div>
       {% endblock %}
     </main>

@@ -126,16 +126,25 @@ final class EvenementController extends AbstractController
 
         return $this->redirectToRoute('app_evenement');
     }
+//liste 
+#[Route('/evenements/liste', name: 'app_evenements_liste')]
+public function listEvenements(Request $request, EvenementRepository $evenementRepository): Response
+{
+    // Récupérer le terme de recherche depuis la requête
+    $searchTerm = $request->query->get('search', '');
 
-    // Liste des événements (front)
-    #[Route('/evenements/liste', name: 'app_evenements_liste')]
-    public function listEvenements(EvenementRepository $evenementRepository): Response
-    {
-        $evenements = $evenementRepository->findAll();
-        return $this->render('evenement/liste.html.twig', [
-            'evenements' => $evenements,
-        ]);
-    }
+    // Récupérer le paramètre de tri depuis la requête
+    $sortBy = $request->query->get('sort_by', 'default');
+
+    // Filtrer les événements en fonction du terme de recherche et du tri
+    $evenements = $evenementRepository->findBySearchAndSort($searchTerm, $sortBy);
+
+    return $this->render('evenement/liste.html.twig', [
+        'evenements' => $evenements,
+        'searchTerm' => $searchTerm, // Passer le terme de recherche au template
+        'sortBy' => $sortBy, // Passer le paramètre de tri au template
+    ]);
+}
 
     // Détail d'un événement
     #[Route('/evenements/{id}', name: 'app_evenement_detail')]
