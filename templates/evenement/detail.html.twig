@@ -272,6 +272,31 @@
         </div>
       </div>
     </div>
+               <!-- Comment Section -->
+<div class="mt-4">
+    <h4>Ajouter un commentaire</h4>
+    <form action="{{ path('app_commentaire_event_new', {'id': evenement.id}) }}" method="post">
+        <div class="form-group">
+            <textarea name="commentaire" class="form-control" rows="3" placeholder="Votre commentaire..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Envoyer</button>
+    </form>
+</div>
+
+<!-- Display existing comments -->
+<div class="mt-4">
+    <h4>Commentaires</h4>
+    {% for commentaire in evenement.commentaireEvents %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <p class="card-text">{{ commentaire.contenu }}</p>
+                <small class="text-muted">Posté le {{ commentaire.dateCreation|date('d/m/Y H:i') }} par {{ commentaire.user.nom }}</small>
+            </div>
+        </div>
+    {% else %}
+        <p>Aucun commentaire pour le moment.</p>
+    {% endfor %}
+</div>
     <!-- Single Product End -->
 
     <!-- Footer Start -->

@@ -58,6 +58,8 @@ private Collection $inscriptions;
     {
         $this->evenementRegions = new ArrayCollection();
         $this->inscriptions = new ArrayCollection();
+        $this->commentaireEvents = new ArrayCollection();
+
     }
 
     // Getters et Setters
@@ -233,6 +235,35 @@ public function removeInscription(Inscription $inscription): self
 
     return $this;
 }
+
+#[ORM\OneToMany(mappedBy: 'evenement', targetEntity: CommentaireEvent::class)]
+private Collection $commentaireEvents;
+
+public function getCommentaireEvents(): Collection
+{
+    return $this->commentaireEvents;
+}
+public function addCommentaireEvent(CommentaireEvent $commentaireEvent): self
+{
+    if (!$this->commentaireEvents->contains($commentaireEvent)) {
+        $this->commentaireEvents->add($commentaireEvent);
+        $commentaireEvent->setEvenement($this);
+    }
+
+    return $this;
 }
 
+public function removeCommentaireEvent(CommentaireEvent $commentaireEvent): self
+{
+    if ($this->commentaireEvents->removeElement($commentaireEvent)) {
+        // set the owning side to null (unless already changed)
+        if ($commentaireEvent->getEvenement() === $this) {
+            $commentaireEvent->setEvenement(null);
+        }
+    }
 
+
+
+
+}
+}

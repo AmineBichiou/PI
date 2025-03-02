@@ -53,3 +53,13 @@ app_entrepot_delete:
     path: /entrepot/{id}
     controller: App\Controller\EntrepotController::delete
     methods: POST
+
+commentaire_ajouter:
+    path: /evenement/{id}/commentaire
+    controller: App\Controller\CommentaireEventController::ajouterCommentaire
+    methods: [GET, POST]
+
+commentaire_liste:
+    path: /evenement/{id}/commentaires
+    controller: App\Controller\CommentaireEventController::listeCommentaires
+    methods: [GET]

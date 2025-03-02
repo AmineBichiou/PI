@@ -66,6 +66,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->reclamations = new ArrayCollection();
         $this->produits = new ArrayCollection();
         $this->inscriptions = new ArrayCollection();
+        $this->commentaireEvents = new ArrayCollection();
+
     }
 
     #[ORM\PrePersist]
@@ -241,4 +243,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
         return $this;
     }
+
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: CommentaireEvent::class)]
+    private Collection $commentaireEvents;
+    
+    public function getCommentaireEvents(): Collection
+    {
+        return $this->commentaireEvents;
+    }
+
+
+
+
+
 }

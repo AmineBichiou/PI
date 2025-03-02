@@ -1,0 +1,14 @@
+
+{% block title %}Ajouter un commentaire{% endblock %}
+{% block body %}
+    <h1>Ajouter un commentaire</h1>
+
+    {{ form_start(form) }}
+        {{ form_row(form.contenu) }}
+
+        <button type="submit" class="btn btn-primary">Envoyer</button>
+    {{ form_end(form) }}
+
+   <a href="{{ path('app_commentaire_event_new', {'id': evenement.id}) }}" class="btn btn-secondary">Retour à l'événement</a>
+
+{% endblock %}        
