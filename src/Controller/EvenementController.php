@@ -13,6 +13,8 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use App\Repository\EvenementRepository;
+use App\Entity\Inscription;
+use App\Form\InscriptionType; 
 
 final class EvenementController extends AbstractController
 {
@@ -152,6 +154,76 @@ public function listEvenements(Request $request, EvenementRepository $evenementR
     {
         return $this->render('evenement/detail.html.twig', [
             'evenement' => $evenement,
+        ]);
+    }
+
+    #[Route('/api/evenements', name: 'app_evenements_api', methods: ['GET'])]
+    public function apiEvents(EvenementRepository $evenementRepository): Response
+    {
+        // Récupérer tous les événements
+        $evenements = $evenementRepository->findAll();
+    
+        // Préparer les données pour FullCalendar
+        $data = [];
+        foreach ($evenements as $evenement) {
+            $data[] = [
+                'id' => $evenement->getId(),
+                'title' => $evenement->getTitre(),
+                'start' => $evenement->getDateDebut() ? $evenement->getDateDebut()->format('Y-m-d H:i:s') : null,
+                'end' => $evenement->getDateFin() ? $evenement->getDateFin()->format('Y-m-d H:i:s') : null,
+                'description' => $evenement->getDescription(),
+                'color' => '#378006', // Couleur spécifique pour chaque événement
+            ];
+        }
+    
+        // Retourner les données au format JSON
+        return $this->json($data);
+    }
+
+    //inscription
+    #[Route('/evenement/inscription/{id}', name: 'app_evenement_inscription_form')]
+    public function inscriptionForm(Request $request, Evenement $evenement, EntityManagerInterface $entityManager): Response
+    {
+        // Récupérer l'utilisateur connecté
+        $user = $this->getUser();
+    
+        // Créez une nouvelle inscription
+        $inscription = new Inscription();
+        $inscription->setEvenement($evenement);
+    
+        // Si l'utilisateur est connecté, pré-remplissez les champs
+        if ($user) {
+            $inscription->setNom($user->getNom());
+            $inscription->setPrenom($user->getPrenom());
+            $inscription->setEmail($user->getEmail());
+            $inscription->setNumTel($user->getNumTel());
+        }
+    
+        // Créez le formulaire
+        $form = $this->createForm(InscriptionType::class, $inscription);
+    
+        // Traitez la soumission du formulaire
+        $form->handleRequest($request);
+    
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Associez l'utilisateur connecté à l'inscription
+            if ($user) {
+                $inscription->setUser($user);
+            }
+    
+            // Enregistrez l'inscription en base de données
+            $entityManager->persist($inscription);
+            $entityManager->flush();
+    
+            $this->addFlash('success', 'Inscription réussie !');
+            return $this->redirectToRoute('app_evenement'); // Redirection vers la liste des événements
+        }
+    
+        // Affichez le formulaire
+        return $this->render('evenement/inscription_form.html.twig', [
+            'form' => $form->createView(),
+            'evenement' => $evenement,
+            'user' => $user, // Passez l'utilisateur connecté au template
         ]);
     }
 }

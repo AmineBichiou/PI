@@ -50,10 +50,14 @@ private ?string $description = null;
     #[ORM\OneToMany(mappedBy: 'evenement', targetEntity: EvenementRegion::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[Assert\Count(min: 1, minMessage: 'Vous devez sélectionner au moins une région.')]
     private Collection $evenementRegions;
+    #[ORM\OneToMany(mappedBy: 'evenement', targetEntity: Inscription::class, cascade: ['persist', 'remove'])]
+private Collection $inscriptions;
+
 
     public function __construct()
     {
         $this->evenementRegions = new ArrayCollection();
+        $this->inscriptions = new ArrayCollection();
     }
 
     // Getters et Setters
@@ -201,6 +205,34 @@ private ?string $description = null;
         }
         return $this;
     }
+    /**
+ * @return Collection<int, Inscription>
+ */
+public function getInscriptions(): Collection
+{
+    return $this->inscriptions;
+}
+
+public function addInscription(Inscription $inscription): self
+{
+    if (!$this->inscriptions->contains($inscription)) {
+        $this->inscriptions->add($inscription);
+        $inscription->setEvenement($this);
+    }
+
+    return $this;
+}
+
+public function removeInscription(Inscription $inscription): self
+{
+    if ($this->inscriptions->removeElement($inscription)) {
+        if ($inscription->getEvenement() === $this) {
+            $inscription->setEvenement(null);
+        }
+    }
+
+    return $this;
+}
 }
 
 
