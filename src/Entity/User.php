@@ -50,7 +50,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $prenom = null;
 
     #[ORM\Column(length: 20, nullable: true)]
-    private ?string $numTel = null; // Numéro de téléphone sous forme de chaîne de caractères
+    private ?string $numTel = null;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Reclamations::class, cascade: ['persist', 'remove'])]
     private Collection $reclamations;
@@ -61,13 +61,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Inscription::class, cascade: ['persist', 'remove'])]
     private Collection $inscriptions;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: CommentaireEvent::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $commentaireEvents;
+
     public function __construct()
     {
         $this->reclamations = new ArrayCollection();
         $this->produits = new ArrayCollection();
         $this->inscriptions = new ArrayCollection();
         $this->commentaireEvents = new ArrayCollection();
-
     }
 
     #[ORM\PrePersist]
@@ -244,17 +246,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: CommentaireEvent::class)]
-    private Collection $commentaireEvents;
-    
     public function getCommentaireEvents(): Collection
     {
         return $this->commentaireEvents;
     }
 
+    public function addCommentaireEvent(CommentaireEvent $commentaireEvent): self
+    {
+        if (!$this->commentaireEvents->contains($commentaireEvent)) {
+            $this->commentaireEvents->add($commentaireEvent);
+            $commentaireEvent->setUser($this);
+        }
 
+        return $this;
+    }
 
+    public function removeCommentaireEvent(CommentaireEvent $commentaireEvent): self
+    {
+        if ($this->commentaireEvents->removeElement($commentaireEvent)) {
+            if ($commentaireEvent->getUser() === $this) {
+                $commentaireEvent->setUser(null);
+            }
+        }
 
-
+        return $this;
+    }
 }

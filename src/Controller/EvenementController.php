@@ -15,70 +15,84 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use App\Repository\EvenementRepository;
 use App\Entity\Inscription;
 use App\Form\InscriptionType; 
+use Knp\Component\Pager\PaginatorInterface;
+
 
 final class EvenementController extends AbstractController
 {
-
-
-
     #[Route('/evenement/ajout', name: 'app_evenement_ajout')]
-    public function ajout(Request $request, EntityManagerInterface $entityManager, ParameterBagInterface $params): Response
-    {
-        $evenement = new Evenement();
-        $form = $this->createForm(EvenementType::class, $evenement);
-        $form->handleRequest($request);
+public function ajout(Request $request, EntityManagerInterface $entityManager, ParameterBagInterface $params): Response
+{
+    // Crée une nouvelle instance de l'entité Evenement
+    $evenement = new Evenement();
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            // Gestion de la photo
-            $photoFile = $form->get('photoFile')->getData();
-            if ($photoFile) {
+    // Crée le formulaire
+    $form = $this->createForm(EvenementType::class, $evenement);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        // Gestion de la photo
+        $photoFile = $form->get('photoFile')->getData();
+        if ($photoFile) {
+            try {
+                // Génère un nom de fichier unique
                 $photoFilename = uniqid() . '.' . $photoFile->guessExtension();
+
+                // Déplace le fichier téléchargé vers le répertoire de stockage
                 $photoFile->move(
                     $params->get('photos_directory'),
                     $photoFilename
                 );
+
+                // Associe le nom du fichier à l'entité Evenement
                 $evenement->setPhoto($photoFilename);
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Erreur lors du téléchargement de la photo.');
+                return $this->redirectToRoute('app_evenement_ajout');
             }
-
-            // Gestion des régions
-            $regions = $form->get('regions')->getData();
-            foreach ($regions as $region) {
-                $evenement->addRegion($region); // Utilise la méthode addRegion de l'entité Evenement
-            }
-
-            $entityManager->persist($evenement);
-            $entityManager->flush();
-
-            $this->addFlash('success', 'Événement ajouté avec succès !');
-            return $this->redirectToRoute('app_evenement');
         }
 
-        return $this->render('evenement/ajout.html.twig', [
-            'form' => $form->createView(),
-        ]);
-    }
-    // Afficher la liste des événements
-    #[Route('/evenement', name: 'app_evenement')]
-    public function index(EntityManagerInterface $entityManager): Response
-    {
-        $evenements = $entityManager->getRepository(Evenement::class)->findAll();
+        // Gestion des régions
+        $regions = $form->get('regions')->getData();
+        foreach ($regions as $region) {
+            $evenement->addRegion($region);
+        }
 
-        return $this->render('evenement/index.html.twig', [
-            'evenements' => $evenements,  
-        ]);
+        // Enregistre l'événement en base de données
+        $entityManager->persist($evenement);
+        $entityManager->flush();
+
+        // Ajoute un message de succès
+        $this->addFlash('success', 'Événement ajouté avec succès !');
+
+        // Redirige l'utilisateur vers la liste des événements
+        return $this->redirectToRoute('app_evenement');
     }
 
-    // Voir un événement
+    // Affiche le formulaire
+    return $this->render('evenement/ajout.html.twig', [
+        'form' => $form->createView(),
+    ]);
+}
+
+
+
+
+
+
     #[Route('/evenement/{id}', name: 'app_evenement_voir')]
-    public function voir(Evenement $evenement): Response
+    public function voir(int $id, EvenementRepository $evenementRepository): Response
     {
+        $evenement = $evenementRepository->find($id);
+        if (!$evenement) {
+            throw $this->createNotFoundException('L\'événement demandé n\'existe pas.');
+        }
         return $this->render('evenement/voir.html.twig', [
             'evenement' => $evenement,
         ]);
     }
 
-    // Ajouter un événement avec stockage de la photo dans le répertoire
-   
+
 
     // Modifier un événement avec gestion de la photo
     #[Route('/evenement/modifier/{id}', name: 'app_evenement_modifier')]
@@ -128,9 +142,29 @@ final class EvenementController extends AbstractController
 
         return $this->redirectToRoute('app_evenement');
     }
-//liste 
+
+// Afficher la liste des événements
+#[Route('/evenement', name: 'app_evenement')]
+public function index(EntityManagerInterface $entityManager): Response
+{
+    $evenements = $entityManager->getRepository(Evenement::class)->findAll();
+
+    return $this->render('evenement/index.html.twig', [
+        'evenements' => $evenements,  
+    ]);
+}
+
+
+
+
+
+
+
+
+
+//liste (front) 
 #[Route('/evenements/liste', name: 'app_evenements_liste')]
-public function listEvenements(Request $request, EvenementRepository $evenementRepository): Response
+public function listEvenements(Request $request, EvenementRepository $evenementRepository, PaginatorInterface $paginator): Response
 {
     // Récupérer le terme de recherche depuis la requête
     $searchTerm = $request->query->get('search', '');
@@ -139,7 +173,14 @@ public function listEvenements(Request $request, EvenementRepository $evenementR
     $sortBy = $request->query->get('sort_by', 'default');
 
     // Filtrer les événements en fonction du terme de recherche et du tri
-    $evenements = $evenementRepository->findBySearchAndSort($searchTerm, $sortBy);
+    $query = $evenementRepository->findBySearchAndSortQuery($searchTerm, $sortBy);
+
+    // Paginer les résultats
+    $evenements = $paginator->paginate(
+        $query, // Requête à paginer
+        $request->query->getInt('page', 1), // Numéro de la page, 1 par défaut
+        10 // Nombre d'éléments par page
+    );
 
     return $this->render('evenement/liste.html.twig', [
         'evenements' => $evenements,
@@ -148,7 +189,10 @@ public function listEvenements(Request $request, EvenementRepository $evenementR
     ]);
 }
 
-    // Détail d'un événement
+
+
+
+    // Détail d'un événement(front)
     #[Route('/evenements/{id}', name: 'app_evenement_detail')]
     public function detail(Evenement $evenement): Response
     {
@@ -156,8 +200,8 @@ public function listEvenements(Request $request, EvenementRepository $evenementR
             'evenement' => $evenement,
         ]);
     }
-
-    #[Route('/api/evenements', name: 'app_evenements_api', methods: ['GET'])]
+//calendrier
+    #[Route('/api/evenements', name: 'app_evenements_api', methods: ['GET'])]    
     public function apiEvents(EvenementRepository $evenementRepository): Response
     {
         // Récupérer tous les événements

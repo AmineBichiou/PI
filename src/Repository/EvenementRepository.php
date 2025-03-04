@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Evenement;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\QueryBuilder;
 
 /**
  * @extends ServiceEntityRepository<Evenement>
@@ -35,40 +36,48 @@ class EvenementRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
-    public function findBySearchAndSort(string $searchTerm = '', string $sortBy = 'default'): array
-{
-    $queryBuilder = $this->createQueryBuilder('e');
 
-    // Ajouter une condition de recherche si un terme est fourni
-    if ($searchTerm) {
-        $queryBuilder->andWhere('e.titre LIKE :searchTerm OR e.description LIKE :searchTerm')
-            ->setParameter('searchTerm', '%' . $searchTerm . '%');
+    /**
+     * Retourne un QueryBuilder pour les événements filtrés et triés.
+     *
+     * @param string $searchTerm Le terme de recherche.
+     * @param string $sortBy Le critère de tri.
+     * @return QueryBuilder Le QueryBuilder pour la pagination.
+     */
+    public function findBySearchAndSortQuery(string $searchTerm = '', string $sortBy = 'default'): QueryBuilder
+    {
+        $queryBuilder = $this->createQueryBuilder('e');
+
+        // Ajouter une condition de recherche si un terme est fourni
+        if ($searchTerm) {
+            $queryBuilder->andWhere('e.titre LIKE :searchTerm OR e.description LIKE :searchTerm')
+                ->setParameter('searchTerm', '%' . $searchTerm . '%');
+        }
+
+        // Ajouter un tri en fonction du paramètre
+        switch ($sortBy) {
+            case 'foire':
+                $queryBuilder->andWhere('e.type = :type')
+                    ->setParameter('type', 'foire');
+                break;
+            case 'formation':
+                $queryBuilder->andWhere('e.type = :type')
+                    ->setParameter('type', 'formation');
+                break;
+            case 'conference':
+                $queryBuilder->andWhere('e.type = :type')
+                    ->setParameter('type', 'conference');
+                break;
+            case 'date':
+                $queryBuilder->orderBy('e.dateDebut', 'ASC');
+                break;
+            default:
+                // Pas de tri spécifique
+                break;
+        }
+
+        return $queryBuilder;
     }
-
-    // Ajouter un tri en fonction du paramètre
-    switch ($sortBy) {
-        case 'foire':
-            $queryBuilder->andWhere('e.type = :type')
-                ->setParameter('type', 'foire');
-            break;
-        case 'formation':
-            $queryBuilder->andWhere('e.type = :type')
-                ->setParameter('type', 'formation');
-            break;
-        case 'conference':
-            $queryBuilder->andWhere('e.type = :type')
-                ->setParameter('type', 'conference');
-            break;
-        case 'date':
-            $queryBuilder->orderBy('e.dateDebut', 'ASC');
-            break;
-        default:
-            // Pas de tri spécifique
-            break;
-    }
-
-    return $queryBuilder->getQuery()->getResult();
-}
 
     /**
      * Trouve les événements triés par date de début (ascendant ou descendant).

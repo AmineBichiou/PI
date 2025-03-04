@@ -204,6 +204,43 @@
                             {% endfor %}
                         {% endif %}
                     </div>
+
+<!-- Pagination -->
+<div class="d-flex justify-content-center mt-4">
+    <nav aria-label="Page navigation example">
+        <ul class="pagination pagination-horizontal">
+            {# Bouton "Précédent" toujours affiché #}
+            <li class="page-item {{ evenements.currentPageNumber == 1 ? 'disabled' : '' }}">
+                <a class="page-link" href="{{ evenements.currentPageNumber == 1 ? '#' : path(app.request.attributes.get('_route'), app.request.query.all|merge({'page': evenements.currentPageNumber - 1})) }}">
+                    Précédent
+                </a>
+            </li>
+
+            {# Toujours afficher 1, 2, 3 sur la même ligne #}
+            {% for page in [1, 2, 3] %}
+                <li class="page-item {{ page == evenements.currentPageNumber ? 'active' : '' }}">
+                    <a class="page-link" href="{{ path(app.request.attributes.get('_route'), app.request.query.all|merge({'page': page})) }}">{{ page }}</a>
+                </li>
+            {% endfor %}
+
+            {# Bouton "Suivant" toujours affiché #}
+            <li class="page-item {{ evenements.currentPageNumber == evenements.pageCount ? 'disabled' : '' }}">
+                <a class="page-link" href="{{ evenements.currentPageNumber == evenements.pageCount ? '#' : path(app.request.attributes.get('_route'), app.request.query.all|merge({'page': evenements.currentPageNumber + 1})) }}">
+                    Suivant
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<style>
+    .pagination-horizontal {
+        display: flex;
+        flex-wrap: nowrap;
+    }
+</style>
+
+
                 </div>
             </div>
         </div>
