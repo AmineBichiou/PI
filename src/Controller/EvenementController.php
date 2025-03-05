@@ -285,7 +285,7 @@ public function listEvenements(Request $request, EvenementRepository $evenementR
             $entityManager->flush();
     
             $this->addFlash('success', 'Inscription réussie !');
-            return $this->redirectToRoute('app_evenement'); // Redirection vers la liste des événements
+            return $this->redirectToRoute('app_evenements_liste'); // Redirection vers la liste des événements
         }
     
         // Affichez le formulaire

@@ -207,13 +207,26 @@
                     Retour à la liste des événements
                   </a>
                 </div>
-<!-- Bouton Inscription -->
+<!-- Affichage du message flash de succès -->
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success" role="alert">
+        {{ message }}
+    </div>
+{% endfor %}
+
+<!-- Affichage du message flash d'erreur (si l'utilisateur est déjà inscrit) -->
+{% for message in app.flashes('error') %}
+    <div class="alert alert-danger" role="alert">
+        {{ message }}
+    </div>
+{% endfor %}
+
 <div class="mt-4">
-  <a href="{{ path('app_evenement_inscription_form', { id: evenement.id }) }}" class="btn btn-primary">
-    S'inscrire
-</a>
-   
+    <a href="{{ path('app_evenement_inscription_form', { id: evenement.id }) }}" class="btn btn-primary">
+        S'inscrire
+    </a>
 </div>
+
 
 
 
