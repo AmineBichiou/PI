@@ -16,7 +16,8 @@ use App\Repository\EvenementRepository;
 use App\Entity\Inscription;
 use App\Form\InscriptionType; 
 use Knp\Component\Pager\PaginatorInterface;
-
+use App\Entity\CommentaireEvent;
+use App\Form\CommentaireEventType;
 
 final class EvenementController extends AbstractController
 {
@@ -184,22 +185,46 @@ public function listEvenements(Request $request, EvenementRepository $evenementR
 
 
     // Détail d'un événement(front)
-    #[Route('/evenement/{id}', name: 'detail_evenement', methods: ['GET'])]
-public function detail(int $id, EvenementRepository $evenementRepository): Response
-{
-    // Récupérer l'événement par son ID
-    $evenement = $evenementRepository->find($id);
-
-    // Vérifier si l'événement existe
-    if (!$evenement) {
-        throw $this->createNotFoundException('L\'événement demandé n\'existe pas.');
+    #[Route('/evenements/{id}', name: 'detail_evenement', methods: ['GET', 'POST'])]
+    public function detail(int $id, EvenementRepository $evenementRepository, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        // Récupérer l'événement par son ID
+        $evenement = $evenementRepository->find($id);
+    
+        // Vérifier si l'événement existe
+        if (!$evenement) {
+            throw $this->createNotFoundException('L\'événement demandé n\'existe pas.');
+        }
+    
+        // Créer un nouveau commentaire et le formulaire associé
+        $commentaire = new CommentaireEvent();
+        $form = $this->createForm(CommentaireEventType::class, $commentaire);
+    
+        // Gérer la soumission du formulaire
+        $form->handleRequest($request);
+    
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Associer le commentaire à l'événement et à l'utilisateur connecté
+            $commentaire->setEvenement($evenement);
+            $commentaire->setUser($this->getUser()); // Assurez-vous que l'utilisateur est connecté
+            $commentaire->setDateCreation(new \DateTime());
+    
+            // Enregistrer le commentaire en base de données
+            $entityManager->persist($commentaire);
+            $entityManager->flush();
+    
+            // Rediriger pour éviter la soumission multiple du formulaire
+            $this->addFlash('success', 'Votre commentaire a été ajouté avec succès !');
+            return $this->redirectToRoute('detail_evenement', ['id' => $id]);
+        }
+    
+        // Afficher la vue avec l'événement, le formulaire et les commentaires existants
+        return $this->render('evenement/detail.html.twig', [
+            'evenement' => $evenement,
+            'form' => $form->createView(), // Passer le formulaire à la vue
+            'commentaires' => $evenement->getCommentaireEvents(), // Passer les commentaires existants
+        ]);
     }
-
-    // Afficher la vue
-    return $this->render('evenement/detail.html.twig', [
-        'evenement' => $evenement,
-    ]);
-}
 //calendrier
     #[Route('/api/evenements', name: 'app_evenements_api', methods: ['GET'])]    
     public function apiEvents(EvenementRepository $evenementRepository): Response

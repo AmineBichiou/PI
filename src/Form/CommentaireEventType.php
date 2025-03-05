@@ -15,6 +15,7 @@ class CommentaireEventType extends AbstractType
             ->add('contenu', TextareaType::class, [
                 'label' => 'Votre commentaire',
                 'attr' => ['rows' => 5],
+                'required' => true,
             ]);
     }
 

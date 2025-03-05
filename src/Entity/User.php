@@ -246,6 +246,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /**
+     * @return Collection<int, CommentaireEvent>
+     */
     public function getCommentaireEvents(): Collection
     {
         return $this->commentaireEvents;

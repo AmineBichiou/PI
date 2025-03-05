@@ -15,16 +15,20 @@ class CommentaireEvent
 
     #[ORM\Column(type: 'text')]
     #[Assert\NotBlank(message: 'Le contenu du commentaire est obligatoire.')]
+    #[Assert\Length(
+        min: 5,
+        minMessage: 'Le commentaire doit contenir au moins {{ limit }} caractères.'
+    )]
     private ?string $contenu = null;
 
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $dateCreation = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'commentaireEvents')]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'commentaireEvents', cascade: ['remove'])]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
-    #[ORM\ManyToOne(targetEntity: Evenement::class, inversedBy: 'commentaireEvents')]
+    #[ORM\ManyToOne(targetEntity: Evenement::class, inversedBy: 'commentaireEvents', cascade: ['remove'])]
     #[ORM\JoinColumn(nullable: false)]
     private ?Evenement $evenement = null;
 
@@ -55,6 +59,12 @@ class CommentaireEvent
         return $this->dateCreation;
     }
 
+    public function setDateCreation(\DateTimeInterface $dateCreation): self
+    {
+        $this->dateCreation = $dateCreation;
+        return $this;
+    }
+
     public function getUser(): ?User
     {
         return $this->user;
@@ -74,13 +84,6 @@ class CommentaireEvent
     public function setEvenement(?Evenement $evenement): self
     {
         $this->evenement = $evenement;
-        return $this;
-    }
-  
-
-    public function setDateCreation(\DateTimeInterface $dateCreation): self
-    {
-        $this->dateCreation = $dateCreation;
         return $this;
     }
 }
