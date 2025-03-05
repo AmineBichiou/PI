@@ -13,6 +13,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.4",
         "doctrine/orm": "^3.3",
         "google-gemini-php/client": "^1.0",
+        "google/apiclient": "^2.18",
         "knplabs/knp-paginator-bundle": "^6.6",
         "nyholm/psr7": "^1.8",
         "php-http/discovery": "^1.20",
