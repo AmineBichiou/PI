@@ -143,16 +143,7 @@ public function ajout(Request $request, EntityManagerInterface $entityManager, P
         return $this->redirectToRoute('app_evenement');
     }
 
-// Afficher la liste des événements
-#[Route('/evenement', name: 'app_evenement')]
-public function index(EntityManagerInterface $entityManager): Response
-{
-    $evenements = $entityManager->getRepository(Evenement::class)->findAll();
 
-    return $this->render('evenement/index.html.twig', [
-        'evenements' => $evenements,  
-    ]);
-}
 
 
 
@@ -193,13 +184,22 @@ public function listEvenements(Request $request, EvenementRepository $evenementR
 
 
     // Détail d'un événement(front)
-    #[Route('/evenements/{id}', name: 'app_evenement_detail')]
-    public function detail(Evenement $evenement): Response
-    {
-        return $this->render('evenement/detail.html.twig', [
-            'evenement' => $evenement,
-        ]);
+    #[Route('/evenement/{id}', name: 'detail_evenement', methods: ['GET'])]
+public function detail(int $id, EvenementRepository $evenementRepository): Response
+{
+    // Récupérer l'événement par son ID
+    $evenement = $evenementRepository->find($id);
+
+    // Vérifier si l'événement existe
+    if (!$evenement) {
+        throw $this->createNotFoundException('L\'événement demandé n\'existe pas.');
     }
+
+    // Afficher la vue
+    return $this->render('evenement/detail.html.twig', [
+        'evenement' => $evenement,
+    ]);
+}
 //calendrier
     #[Route('/api/evenements', name: 'app_evenements_api', methods: ['GET'])]    
     public function apiEvents(EvenementRepository $evenementRepository): Response
@@ -268,6 +268,15 @@ public function listEvenements(Request $request, EvenementRepository $evenementR
             'form' => $form->createView(),
             'evenement' => $evenement,
             'user' => $user, // Passez l'utilisateur connecté au template
+        ]);
+    }
+    #[Route('/evenement', name: 'app_evenement')]
+    public function index(EntityManagerInterface $entityManager): Response
+    {
+        $evenements = $entityManager->getRepository(Evenement::class)->findAll();
+
+        return $this->render('evenement/index.html.twig', [
+            'evenements' => $evenements,  
         ]);
     }
 }
