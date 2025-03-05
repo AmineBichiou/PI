@@ -164,7 +164,7 @@ public function listEvenements(Request $request, EvenementRepository $evenementR
     $sortBy = $request->query->get('sort_by', 'default');
 
     // Filtrer les événements en fonction du terme de recherche et du tri
-    $query = $evenementRepository->findBySearchAndSortQuery($searchTerm, $sortBy);
+    $query = $evenementRepository->findBySearchAndSort($searchTerm, $sortBy);
 
     // Paginer les résultats
     $evenements = $paginator->paginate(
