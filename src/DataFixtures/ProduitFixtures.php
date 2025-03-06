@@ -40,7 +40,6 @@ class ProduitFixtures extends Fixture
             $produit->setNom($faker->word);
             $produit->setDescription($faker->sentence(10));
             $produit->setPrixUnitaire($faker->randomFloat(2, 1, 100));
-            $produit->setUrlImageProduit($faker->imageUrl(200, 200, 'products'));
             $produit->setQuantite($faker->numberBetween(5, 100));
             $produit->setCategorie($faker->randomElement($categories));
     

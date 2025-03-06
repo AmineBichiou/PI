@@ -130,6 +130,29 @@
             border-color: #dc3545;
             box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
         }
+
+        .description-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        .ai-generate-btn {
+            background-color: #81c408;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 11px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            gap: 8px;
+            margin: 14px 0;
+            display: flex;
+            align-items: center;
+            align-self: flex-end;
+            width: fit-content;
+        }
+
     </style>
 </head>
 
@@ -187,11 +210,13 @@
                         </div>
                         <div class="mb-3">
                             {{ form_widget(form.description, {'attr': {'class': 'form-text-area'}}) }}
-                            <div class="form-error {% if form.description.vars.errors|length %}show{% endif %}"
-                                 id="{{ form.description.vars.id }}_error">
+                            <div class="form-error ...">
                                 {{ form_errors(form.description) }}
                             </div>
                         </div>
+                        <button type="button" id="generate-description-btn" class="ai-generate-btn">
+                            <span class="ai-icon">✨</span> Generate with AI
+                        </button>
                     </div>
 
                     <div class="categorie-container">
@@ -232,32 +257,68 @@
         </div>
     </main>
 
-    <script>
-        function previewFile() {
-            const previewContainer = document.querySelector('.image-preview-container');
-            const preview = document.getElementById('preview-image');
-            const previewText = document.querySelector('.preview-text');
-            const fileInput = document.querySelector('input[type="file"]');
-
-            if (!fileInput) return;
-
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-
-            if (file) {
-                reader.onload = (e) => {
-                    preview.src = e.target.result;
-                    preview.classList.add('loaded');
-                    previewText.classList.add('hidden');
-                    previewContainer.style.backgroundColor = '#fff';
-                };
-                reader.readAsDataURL(file);
-            } else {
-                preview.src = '';
-                preview.classList.remove('loaded');
-                previewText.classList.remove('hidden');
-                previewContainer.style.backgroundColor = '#f8f9fa';
-            }
+   <script>
+    document.getElementById('generate-description-btn').addEventListener('click', function() {
+        const productName = document.getElementById('{{ form.nom.vars.id }}').value;
+        if (!productName) {
+            alert('Please enter a product name.');
+            return;
         }
-    </script>
+
+        // Fixed URL construction - using template literals and proper quotes
+        fetch(`/api/generate-description/${encodeURIComponent(productName)}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({}) // Empty object since controller uses default payload
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                document.getElementById('{{ form.description.vars.id }}').value = data.description;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while generating the description.');
+        });
+    });
+
+    // Preview function remains unchanged
+    function previewFile() {
+        const previewContainer = document.querySelector('.image-preview-container');
+        const preview = document.getElementById('preview-image');
+        const previewText = document.querySelector('.preview-text');
+        const fileInput = document.querySelector('input[type="file"]');
+
+        if (!fileInput) return;
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        if (file) {
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.classList.add('loaded');
+                previewText.classList.add('hidden');
+                previewContainer.style.backgroundColor = '#fff';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.src = '';
+            preview.classList.remove('loaded');
+            previewText.classList.remove('hidden');
+            previewContainer.style.backgroundColor = '#f8f9fa';
+        }
+    }
+</script>
 {% endblock %}

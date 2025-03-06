@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Form;
 
 use App\Entity\Categorie;
@@ -46,7 +47,9 @@ class ProductType extends AbstractType
                 'label' => 'Quantité en stock',
                 'empty_data' => '0',
                 'constraints' => [
-                    new Assert\Positive(['message' => 'La quantité ne peut pas être négative.']),
+                    new Assert\Positive([
+                        'message' => 'La quantité ne peut pas être négative.',
+                    ]),
                 ],
                 'attr' => ['min' => 0],
                 'invalid_message' => 'Veuillez entrer un nombre entier valide.',
@@ -65,10 +68,9 @@ class ProductType extends AbstractType
             ->add('imageFile', VichImageType::class, [
                 'label' => 'Image du produit',
                 'required' => !$options['is_edit'],
-                'allow_delete' => true,
                 'download_uri' => false,
-                'image_uri' => true,
-                'asset_helper' => true,
+                'allow_delete' => false,
+                'image_uri' => false,
             ])
             ->add('categorie', EntityType::class, [
                 'class' => Categorie::class,
@@ -77,12 +79,13 @@ class ProductType extends AbstractType
                         ->where('c.parent IS NOT NULL');
                 },
                 'choice_label' => 'nom',
-                'placeholder' => 'Select a subcategory',
+                'placeholder' => 'Sélectionner une sous-catégorie',
                 'attr' => ['class' => 'form-control'],
                 'required' => false,
-
                 'constraints' => [
-                    new Assert\NotNull(['message' => 'Veuillez sélectionner une catégorie.']),
+                    new Assert\NotNull([
+                        'message' => 'Veuillez sélectionner une catégorie.',
+                    ]),
                 ],
             ])
             ->add('save', SubmitType::class, [

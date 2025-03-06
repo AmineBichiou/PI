@@ -130,13 +130,5 @@ class CategorieController extends AbstractController
         return $this->redirectToRoute('liste_categories');
     }
 
-    #[Route('/categorie/{slug}', name: 'categorie_show')]
-    public function show(EntityManagerInterface $entityManager,Categorie $categorie): Response
-    {
-        $products = $entityManager->getRepository(Produit::class)->findAll();
-        return $this->render('produit/categorieShow.html.twig', [
-            'categorie' => $categorie,
-            'produits' => $products,
-        ]);
-    }
+    
 }

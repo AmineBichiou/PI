@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller\produit;
 
 use App\Entity\Categorie;
@@ -34,42 +35,27 @@ class ProductsController extends AbstractController
         $this->httpClient = $httpClient;
         $this->commentaireRepository = $commentaireRepository;
     }
+
     #[Route('/produit/ajout', name: 'ajout_produit')]
     public function addProduct(Request $request): Response
     {
-        // Initialize the $produit variable as a new Produit object
         $produit = new Produit();
-
-        // Create the form and bind it to the $produit object
         $form = $this->createForm(ProductType::class, $produit, ['attr' => ['novalidate' => 'novalidate']]);
-
-        // Handle the form submission
         $form->handleRequest($request);
-
         if ($form->isSubmitted() && $form->isValid()) {
-            // Handle file upload using the VhImageUpload function
             $this->VhImageUpload($form, $produit);
-
-            // Set the user for the product
             $produit->setUser($this->getUser());
-
-            // Persist and flush the product to the database
             $this->entityManager->persist($produit);
             $this->entityManager->flush();
-
-            // Add a success flash message
             $this->addFlash('success', 'Product added successfully!');
-
-            // Redirect to the product list page
             return $this->redirectToRoute('liste_produits');
         }
-
-        // Pass the form and produit variables to the template
         return $this->render('produit/productcreate.html.twig', [
             'form' => $form->createView(),
-            'produit' => $produit, // Pass the produit variable
+            'produit' => $produit,
         ]);
     }
+
     private function VhImageUpload($form, Produit $product): void
     {
         if (!$form->isSubmitted() || !$form->isValid()) {
@@ -80,9 +66,7 @@ class ProductsController extends AbstractController
         if (!$form->has('imageFile')) {
             throw new \RuntimeException('The form does not have an "imageFile" field.');
         }
-
         $imageFile = $form->get('imageFile')->getData();
-
         if ($imageFile) {
             if (!$imageFile instanceof UploadedFile) {
                 throw new \RuntimeException(sprintf(
@@ -126,8 +110,9 @@ class ProductsController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->handleImageUpload($form, $product);
+            $this->vhImageUpload($form, $product); // Fixed variable name from $produit to $product
             $this->entityManager->flush();
+            $this->addFlash('success', 'Product updated successfully!');
             return $this->redirectToRoute('liste_produits');
         }
 
@@ -164,7 +149,7 @@ class ProductsController extends AbstractController
 
         $adapter = new QueryAdapter($queryBuilder);
         $pagerfanta = new Pagerfanta($adapter);
-        $pagerfanta->setMaxPerPage(5);
+        $pagerfanta->setMaxPerPage(12);
 
         try {
             $currentPage = $request->query->getInt('page', 1);
@@ -178,47 +163,6 @@ class ProductsController extends AbstractController
             'pager' => $pagerfanta,
             'categories' => $categories,
         ]);
-    }
-
-    #[Route('/produit/filter', name: 'filter_produits', methods: ['POST'])]
-    public function filterProducts(Request $request, PaginatorInterface $paginator): JsonResponse
-    {
-        try {
-            $data = json_decode($request->getContent(), true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new \Exception('Invalid JSON data');
-            }
-
-            $categories = $data['categories'] ?? [];
-            $queryBuilder = $this->entityManager->getRepository(Produit::class)
-                ->createQueryBuilder('p')
-                ->join('p.categorie', 'c');
-
-            if (!empty($categories)) {
-                $queryBuilder->where('c.nom IN (:categories)')->setParameter('categories', $categories);
-            }
-
-            $pagination = $paginator->paginate($queryBuilder, $request->query->getInt('page', 1), 10);
-
-            $products = array_map(fn($product) => [
-                'nom' => $product->getNom(),
-                'description' => $product->getDescription(),
-                'prixUnitaire' => $product->getPrixUnitaire(),
-                'urlImageProduit' => $product->getUrlImageProduit(),
-                'categorie' => ['nom' => $product->getCategorie()->getNom()],
-                'rate' => $product->getRate(),
-            ], $pagination->getItems());
-
-            return new JsonResponse([
-                'produits' => $products,
-                'pagination' => [
-                    'currentPage' => $pagination->getCurrentPageNumber(),
-                    'pageCount' => $pagination->getPageCount(),
-                ],
-            ]);
-        } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 500);
-        }
     }
 
     private function handleImageUpload($form, Produit $product): void
@@ -387,38 +331,51 @@ class ProductsController extends AbstractController
     #[Route('/api/product/{id}/rate', name: 'api_product_rate', methods: ['POST'])]
     public function rateProduct(Request $request, string $id): JsonResponse
     {
-        $produit = $this->entityManager->getRepository(Produit::class)->find($id);
-        if (!$produit) {
-            return new JsonResponse(['error' => 'Product not found'], 404);
+        try {
+            $produit = $this->entityManager->getRepository(Produit::class)->find($id);
+            if (!$produit) {
+                return new JsonResponse(['error' => 'Product not found'], 404);
+            }
+
+            $user = $this->getUser();
+            if (!$user) {
+                return new JsonResponse(['error' => 'Utilisateur non connecté'], 401);
+            }
+
+            $data = json_decode($request->getContent(), true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return new JsonResponse(['error' => 'Invalid JSON payload'], 400);
+            }
+
+            $rating = $data['rating'] ?? null;
+            if (!is_numeric($rating) || $rating < 1 || $rating > 5) {
+                return new JsonResponse(['error' => 'Invalid rating'], 400);
+            }
+
+            $existingRating = $this->entityManager->getRepository(Commentaire::class)->findOneBy([
+                'produit' => $produit,
+                'user' => $user,
+            ]);
+
+            if ($existingRating) {
+                return new JsonResponse(['error' => 'You have already rated this product'], 403);
+            }
+
+            $this->entityManager->flush();
+            $ratings = $this->entityManager->getRepository(Commentaire::class)->findBy(['produit' => $produit]);
+            $totalRating = array_sum(array_map(fn($r) => $r->getNote(), $ratings));
+            $uniqueUsers = count(array_unique(array_map(fn($r) => $r->getUser()->getId(), $ratings)));
+            $average = $uniqueUsers > 0 ? $totalRating / $uniqueUsers : 0;
+
+            $produit->setRate($average);
+            $this->entityManager->flush();
+
+            return new JsonResponse([
+                'success' => true,
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Server error: ' . $e->getMessage()], 500);
         }
-
-        $data = json_decode($request->getContent(), true);
-        $rating = $data['rating'] ?? null;
-
-        // Validation
-        if (!is_numeric($rating) || $rating < 1 || $rating > 5) {
-            return new JsonResponse(['error' => 'Invalid rating'], 400);
-        }
-
-        // Enregistrement en base
-        $commentaire = new Commentaire();
-        $commentaire->setNote($rating)
-            ->setProduit($produit)
-            ->setAuteur('Anonymous')
-            ->setContenu('Auto-generated rating comment');
-
-        $this->entityManager->persist($commentaire);
-        $this->entityManager->flush();
-
-        // Calcul nouvelle moyenne
-        $average = $this->commentaireRepository->getAverageRatingByProduit($id);
-        $produit->setRate($average);
-        $this->entityManager->flush();
-
-        return new JsonResponse([
-            'success' => true,
-            'newAverage' => $average
-        ]);
     }
 
     #[Route('/api/product/{id}/comments', name: 'api_product_comments', methods: ['GET'])]
@@ -458,7 +415,7 @@ class ProductsController extends AbstractController
         }
         $commentaire = new Commentaire();
         $commentaire->setContenu($data['content'])
-            ->setNote((float) $data['note'])
+            ->setNote((float)$data['note'])
             ->setAuteur($this->getUser()->getNom())
             ->setProduit($produit)
             ->setUser($user);
@@ -475,5 +432,122 @@ class ProductsController extends AbstractController
             'updatedRate' => $averageRate
         ]);
     }
+
+    #[Route('/api/products', name: 'api_products_all', methods: ['GET'])]
+    public function getAllProducts(Request $request): JsonResponse
+    {
+        $queryBuilder = $this->entityManager->createQueryBuilder()
+            ->select('p')
+            ->from(Produit::class, 'p')
+            ->orderBy('p.id', 'DESC');
+
+        // Apply filters
+        $searchTerm = $request->query->get('search');
+        $priceMax = $request->query->get('price_max');
+        $categories = $request->query->get('categories') ? explode(',', $request->query->get('categories')) : [];
+
+        if ($searchTerm) {
+            $queryBuilder->andWhere('p.nom LIKE :searchTerm')
+                ->setParameter('searchTerm', '%' . $searchTerm . '%');
+        }
+
+        if ($priceMax !== null && is_numeric($priceMax)) {
+            $queryBuilder->andWhere('p.prixUnitaire <= :priceMax')
+                ->setParameter('priceMax', (float)$priceMax);
+        }
+
+        if (!empty($categories)) {
+            $queryBuilder->andWhere('p.categorie IN (:categories)')
+                ->setParameter('categories', $categories);
+        }
+
+        $products = $queryBuilder->getQuery()->getResult();
+
+        $productData = array_map(fn($produit) => [
+            'id' => $produit->getId(),
+            'nom' => $produit->getNom(),
+            'description' => $produit->getDescription(),
+            'prixUnitaire' => $produit->getPrixUnitaire(),
+            'urlImageProduit' => $this->vichUploaderAsset($produit, 'imageFile'), // Adjust based on your setup
+            'categorie' => $produit->getCategorie()->getNom(),
+            'quantite' => $produit->getQuantite(),
+        ], $products);
+
+        return new JsonResponse(['products' => $productData]);
+    }
+
+    private function vichUploaderAsset($entity, $fieldName): string
+    {
+        $helper = $this->container->get('vich_uploader.templating.helper.uploader_helper');
+        return $helper->asset($entity, $fieldName) ?? '';
+    }
+
+    #[Route('/api/generate-description/{query}', name: 'api_generate_description', methods: ['POST'])]
+    public function generateDescription(Request $request,string $query): JsonResponse
+    {
+        $defaultPayload = [
+            "context" => "Description concise (maximum 3 lignes) d'un produit agricole pour un site e-commerce. Pas d'introduction ni de texte générique, seulement la description du produit.",
+            "formality" => "default",
+            "keywords" => ["fruits", "légumes", "agriculture", "produit frais"],
+            "max_tokens" => 150,
+            "model" => "gemini-2-0-flash",
+            "n" => 1,
+            "source_lang" => "fr",
+            "target_lang" => "fr",
+            "temperature" => 0.7,
+            "title" => $query,
+        ];
+
+        $data = json_decode($request->getContent(), true) ?? [];
+
+        $payload = array_merge($defaultPayload, $data);
+
+        try {
+            $response = $this->httpClient->request('POST', 'https://api.textcortex.com/v1/texts/blogs', [
+                'headers' => [
+                    'Authorization' => 'Bearer gAAAAABnyPuFUnwvy1ifyRzMuFu6IIoz2l6LKSwbC-Ywkc6cibh-hM3iygOBDYK1f8zZIogeEevTZWy-kCw2VXCWFjij1Pwx1Wzyu2u-1T2vzap1KSM8HiRN2nOwvFBbrBNJiSMlumT4JNakMvj0Yu3JSwWlMytYdTcyR1XJrZFIuPw_B3DeztA=',
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => $payload,
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            $content = json_decode($response->getContent(false), true);
+
+            if ($statusCode !== 200) {
+                return new JsonResponse([
+                    'error' => 'Erreur API TextCortex',
+                    'details' => $content,
+                ], $statusCode);
+            }
+
+            $cleanDescription = $this->extractDescription($content);
+
+            return new JsonResponse(["description" => $cleanDescription]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Erreur lors de la requête API', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+
+    private function extractDescription(array $apiResponse): string
+    {
+        if (
+            isset($apiResponse['status']) && $apiResponse['status'] === 'success' &&
+            isset($apiResponse['data']['outputs'][0]['text'])
+        ) {
+            $description = $apiResponse['data']['outputs'][0]['text'];
+
+            $cleanDescription = trim(preg_replace('/\s+/', ' ', $description));
+
+            return $cleanDescription;
+        }
+
+        return "Aucune description valide trouvée.";
+
+
+
+
+}
 
 }
