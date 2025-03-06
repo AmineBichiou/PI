@@ -1,0 +1,107 @@
+<?php
+
+namespace App\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Bundle\SecurityBundle\Security;
+use App\Repository\CommandeFinaliseeRepository;
+
+class RecommandatigfssfonController extends AbstractController
+{
+    #[Route('/recommandation/pythonKnn', name: 'python_knn_recommendation')]
+    public function pythonKnnRecommendation(
+        CommandeFinaliseeRepository $commandeFinaliseeRepository,
+        Security $security
+    ): Response {
+        $user = $security->getUser();
+        if (!$user) {
+            $this->addFlash('error', '❌ Vous devez être connecté pour voir les recommandations.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $userId = $user->getEmail() ?? 'unknown_user';
+
+       
+        $commandesFinalisees = $commandeFinaliseeRepository->findBy(['user' => $user]);
+        $historique = [];
+        foreach ($commandesFinalisees as $cmd) {
+            $historique[] = [
+                "produit_id" => (string) ($cmd->getProduitId() ?? 'N/A'),
+                "quantite"   => $cmd->getQuantite()
+            ];
+        }
+
+     
+        $inputData = [
+            "user_id"    => $userId,
+            "historique" => $historique
+        ];
+        $inputJson = json_encode($inputData);
+
+        
+        $projectDir = $this->getParameter('kernel.project_dir');
+        $scriptPath = $projectDir.'/python_scripts/knn_recommendation.py';
+
+        
+        $process = new Process([
+            'python', 
+            $scriptPath
+        ]);
+
+        
+        $process->setInput($inputJson);
+
+        
+        try {
+            $process->mustRun();
+        } catch (ProcessFailedException $exception) {
+            $this->addFlash('error', 'Erreur en exécutant le script Python : '.$exception->getMessage());
+            return $this->redirectToRoute('historique_commandes');
+        }
+
+        
+        $output = $process->getOutput();
+        $decoded = json_decode($output, true);
+        if (!$decoded) {
+            $this->addFlash('info', 'ℹ️ Aucune donnée de recommandation (décodage JSON impossible).');
+            return $this->redirectToRoute('historique_commandes');
+        }
+
+        
+        $recommendedProducts = $decoded['recommended'] ?? [];
+
+        
+        if (count($recommendedProducts) === 0) {
+            $this->addFlash('info', 'ℹ️ Aucun produit recommandé (KNN) pour le moment.');
+        } else {
+            
+            $maxRecs = 3;
+            $compteur = 0;
+            foreach ($recommendedProducts as $prod) {
+                if ($compteur >= $maxRecs) {
+                    break;
+                }
+                
+                $link = '/produit/shop'; 
+                $this->addFlash(
+                    'success',
+                    '<div class="flash-recommandation" style="display:inline-block;">
+                        <a style="text-decoration:none;color:darkblue" href="'.$link.'">
+                            🛎️ Recommandé (KNN) : '.$prod.'
+                        </a>
+                     </div>'
+                );
+                $compteur++;
+            }
+        }
+
+        
+        return $this->redirectToRoute('historique_commandes');
+    }
+}
