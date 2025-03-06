@@ -21,11 +21,11 @@ class HomePageController extends AbstractController
         return $this->render('homepage/shop.html.twig');
     }
 
-    #[Route('/shop/details', name: 'shopdetails')]
-    public function details(): Response
-    {
-        return $this->render('homepage/shop-details.html.twig');
-    }
+    // #[Route('/shop/details', name: 'shopdetails')]
+    // public function details(): Response
+    // {
+    //     return $this->render('homepage/shop-details.html.twig');
+    // }
     #[Route('/contact', name: 'contact')]
     public function contact(): Response
     {

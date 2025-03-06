@@ -164,6 +164,7 @@ class ProductsController extends AbstractController
             'categories' => $categories,
         ]);
     }
+    
 
     private function handleImageUpload($form, Produit $product): void
     {
@@ -185,6 +186,17 @@ class ProductsController extends AbstractController
             }
         }
     }
+    #[Route('/shop/details', name: 'shopdetails')]
+public function shopProduitss(Request $request, EntityManagerInterface $entityManager): Response
+{
+    $produits = $entityManager->getRepository(Produit::class)->findAll();
+    $categories = $entityManager->getRepository(Categorie::class)->findAll();
+
+    return $this->render('homepage/shop-details.html.twig', [
+        'produits' => $produits,
+        'categories' => $categories,
+    ]);
+}
 
     #[Route('/produit/aiml', name: 'aiml_api', methods: ['POST'])]
     public function callAIMLApi(Request $request, HttpClientInterface $httpClient): JsonResponse

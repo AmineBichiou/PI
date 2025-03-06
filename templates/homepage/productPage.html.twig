@@ -17,6 +17,7 @@
     </style>
 </head>
 <body>
+{% include 'homepage/newNav.html.twig' %}
 <div class="content-wrapper">
     <div class="pages-container">
         <a>home ></a>
@@ -97,10 +98,11 @@
                             {% else %}
                                 <p class="rep">Rupture de stock</p>
                             {% endif %}
-                            <div class="buttons-container">
-                                <button class="add-to-cart">Ajouter au panier</button>
-                                <button class="add-to-fav">Ajouter aux favoris</button>
-                            </div>
+                           <div class="buttons-container">
+    <input type="number" class="quantity-selector" value="1" min="1" max="10">
+    <button class="add-to-cart" data-id="{{ produit.id }}">Ajouter au panier</button>
+    <button class="add-to-fav">Ajouter aux favoris</button>
+</div>
                         </div>
                     </div>
                 {% endfor %}
@@ -371,6 +373,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     updateProductCount();
+});
+
+    document.querySelectorAll(".add-to-cart").forEach(button => {
+    button.addEventListener("click", function (event) {
+        event.preventDefault();
+        const productId = this.getAttribute("data-id");
+        const quantity = this.closest('.buttons-container').querySelector('.quantity-selector').value;
+
+        fetch(`/produit/ajouter-au-panier/${productId}/${quantity}`, {
+            method: "POST",
+            headers: {"X-Requested-With": "XMLHttpRequest"}
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log("✅ Produit ajouté :", data);
+                updateCartCount();
+                const toastEl = document.getElementById("cart-toast");
+                document.querySelector("#cart-toast .toast-body").textContent = "✅ Produit ajouté au panier !";
+                const toast = new bootstrap.Toast(toastEl);
+                toast.show();
+            })
+            .catch(error => console.error("❌ Erreur AJAX :", error));
+    });
 });
 </script>
 

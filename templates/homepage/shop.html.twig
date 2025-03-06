@@ -486,7 +486,7 @@
                 const productId = this.getAttribute("data-id");
                 const quantite = this.getAttribute("data-quantite");
 
-                fetch(`/produit/ajouter-au-panier/${productId}/${quantite}`, {
+                fetch(/produit/ajouter-au-panier/${productId}/${quantite}, {
                     method: "POST",
                     headers: {"X-Requested-With": "XMLHttpRequest"}
                 })

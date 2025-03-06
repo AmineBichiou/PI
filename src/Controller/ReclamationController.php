@@ -351,7 +351,7 @@ class ReclamationController extends AbstractController
         }
     }
     #[Route('/{id}/update-status', name: 'reclamation_update_status', methods: ['POST'])]
-    public function updateStatus(Request $request, Reclamations $reclamation, EntityManagerInterface $entityManager): Response
+    public function updateStatus(Request $request, Reclamations $reclamation, EntityManagerInterface $entityManager)
     {
         $newStatus = $request->request->get('status');
         $allowedStatuses = [

@@ -363,7 +363,7 @@
                                 const value = formatNumber(context.raw);
                                 const total = context.dataset.data.reduce((a, b) => a + b);
                                 const percentage = ((context.raw / total) * 100).toFixed(1);
-                                return `${label}: ${value} unités (${percentage}%)`;
+                                return ${label}: ${value} unités (${percentage}%);
                             }
                         }
                     },
@@ -443,8 +443,8 @@
             // Mettre à jour la tendance des stocks
             const trendIndicator = document.querySelector('#totalStock').closest('.col-md-4').querySelector('.trend-indicator');
             trendIndicator.classList.remove('trend-up', 'trend-down');
-            trendIndicator.classList.add(`trend-${stockData[timeRange].trend.direction}`);
-            trendIndicator.innerHTML = `<i class="fas fa-arrow-${stockData[timeRange].trend.direction}"></i> ${stockData[timeRange].trend.trend >= 0 ? '+' : ''}${stockData[timeRange].trend.trend.toFixed(1)}% vs hier`;
+            trendIndicator.classList.add(trend-${stockData[timeRange].trend.direction});
+            trendIndicator.innerHTML = <i class="fas fa-arrow-${stockData[timeRange].trend.direction}"></i> ${stockData[timeRange].trend.trend >= 0 ? '+' : ''}${stockData[timeRange].trend.trend.toFixed(1)}% vs hier;
     
             // Mettre à jour le graphique de répartition des stocks
             pieChart.data.datasets[0].data = stockData[timeRange].pie;

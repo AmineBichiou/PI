@@ -373,11 +373,11 @@
                                         <td>{{ stock.id }}</td>
                                         <td>{{ stock.produit }}</td>
                                         <td>
-                                            {% if stock.produit.urlImageProduit %}
-                                                <img src="{{ asset(stock.produit.urlImageProduit) }}" class="img-thumbnail" alt="Image produit" style="width: 80px;">
-                                            {% else %}
-                                                <span class="text-muted">Aucune image</span>
-                                            {% endif %}
+                                            {# {% if stock.produit.urlImageProduit %} #}
+                                                <img src="{{ vich_uploader_asset(stock.produit, 'imageFile') }}" class="img-thumbnail" alt="Image produit" style="width: 80px; height:50px">
+                                            {# {% else %} #}
+                                                {# <span class="text-muted">Aucune image</span> #}
+                                            {# {% endif %} #}
                                         </td>
                                         <td>{{ stock.produit.quantite ?? 'N/A' }}</td>
                                         <td>{{ stock.dateEntree|date('d/m/Y H:i') }}</td>
