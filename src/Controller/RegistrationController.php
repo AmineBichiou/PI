@@ -49,7 +49,8 @@ class RegistrationController extends AbstractController
 
             // Encodage du mot de passe
             $plainPassword = $form->get('plainPassword')->getData();
-            $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
+            $hashedPassword = password_hash($plainPassword, PASSWORD_BCRYPT, ['cost' => 10]);
+            $user->setPassword($hashedPassword);
 
             $entityManager->persist($user);
             $entityManager->flush();
@@ -124,6 +125,6 @@ class RegistrationController extends AbstractController
         }
 
         $this->addFlash('success', 'Your email address has been verified.');
-        return $this->redirectToRoute('app_login'); // Redirect to home or wherever you want after verification
+        return $this->redirectToRoute('app_login');
     }
 }
