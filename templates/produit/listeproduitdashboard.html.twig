@@ -201,7 +201,7 @@
                                 <td>{{ produit.prixUnitaire }} DT</td>
                                 <td>{{ produit.quantite}}</td>
                                 <td class="image-containter">
-                                    <img class="produit-image" src="{{ vich_uploader_asset(produit, 'imageFile') }}" alt="{{ produit.nom }}">                                </td>
+                                    <img class="produit-image" src="{{ produit.imageName }}" alt="{{ produit.nom }}">
                                 <td class="action-container">
                                     <div class="d-flex gap-2">
 
