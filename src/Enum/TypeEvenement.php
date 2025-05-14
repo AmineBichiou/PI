@@ -10,13 +10,10 @@ enum TypeEvenement: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::FOIRE => 'Foire',
             self::FORMATION => 'Formation',
             self::CONFERENCE => 'Conférence',
         };
     }
 }
-
-
-

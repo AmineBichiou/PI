@@ -9,48 +9,52 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 use StatutReclamation;
 use Symfony\Component\Validator\Constraints as Assert;
+
 #[ORM\Entity(repositoryClass: ReclamationsRepository::class)]
-#[ORM\HasLifecycleCallbacks] 
+#[ORM\HasLifecycleCallbacks]
 class Reclamations
 {
     #[ORM\Id]
-    #[ORM\Column(type: "uuid")]
-    private ?Uuid $id = null;
+    #[ORM\Column(type: 'string', length: 36, unique: true)]
+    #[ORM\GeneratedValue(strategy: 'NONE')]
+    private ?string $id = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $dateReclamation = null;
 
-    #[ORM\Column(type: "integer")]
+    #[ORM\Column(type: 'integer')]
     #[Assert\NotNull(message: "The rate cannot be null.")]
     #[Assert\Range(min: 1, max: 5, notInRangeMessage: "The rate must be between 1 and 5.")]
     private ?int $rate = 1;
 
     #[ORM\Column(length: 255)]
-        #[Assert\NotBlank(message: "The title cannot be empty.")]
-        #[Assert\Length(
-            min: 5, 
-            max: 55, 
-            minMessage: "The title must be at least {{ limit }} characters long.",
-            maxMessage: "The title cannot be longer than {{ limit }} characters."
-        )]
-        #[Assert\Regex(
-            pattern: "/^\S+\s+\S+.*$/",
-            message: "The title must contain at least two words."
-        )]
-        private ?string $title = null;
+    #[Assert\NotBlank(message: "The title cannot be empty.")]
+    #[Assert\Length(
+        min: 5,
+        max: 55,
+        minMessage: "The title must be at least {{ limit }} characters long.",
+        maxMessage: "The title cannot be longer than {{ limit }} characters."
+    )]
+    #[Assert\Regex(
+        pattern: "/^\S+\s+\S+.*$/",
+        message: "The title must contain at least two words."
+    )]
+    private ?string $title = null;
 
-        #[ORM\Column(length: 255)]
-        #[Assert\NotBlank(message: "The description cannot be empty.")]
-        #[Assert\Length(
-            min: 10, 
-            max: 300, 
-            minMessage: "The description must be at least {{ limit }} characters long.",
-            maxMessage: "The description cannot be longer than {{ limit }} characters."
-        )]
-        private ?string $description = null;
-        #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'reclamations')]
-        #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
-        private ?User $user = null;
+    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "The description cannot be empty.")]
+    #[Assert\Length(
+        min: 10,
+        max: 300,
+        minMessage: "The description must be at least {{ limit }} characters long.",
+        maxMessage: "The description cannot be longer than {{ limit }} characters."
+    )]
+    private ?string $description = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'reclamations')]
+    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
+    private ?User $user = null;
+
     #[ORM\Column(enumType: StatutReclamation::class)]
     private StatutReclamation $statut;
 
@@ -58,52 +62,38 @@ class Reclamations
     #[ORM\JoinColumn(nullable: true, onDelete: "SET NULL")]
     private ?Tag $tag = null;
 
-
-
-    
-
     /**
      * @var Collection<int, MessageReclamation>
      */
     #[ORM\OneToMany(targetEntity: MessageReclamation::class, mappedBy: 'reclamation', cascade: ['remove'])]
     private Collection $reclamations;
 
-    public function getTag(): ?Tag
-{
-    return $this->tag;
-}
-
-public function setTag(?Tag $tag): static
-{
-    $this->tag = $tag;
-    return $this;
-}
-
-
     public function __construct()
     {
         $this->reclamations = new ArrayCollection();
         $this->statut = StatutReclamation::EN_COURS;
+        $this->id = Uuid::v4()->toRfc4122(); // Generate UUID on construction
     }
 
-    #[ORM\PrePersist] 
-    public function generateUuid(): void
+    #[ORM\PrePersist]
+    public function ensureId(): void
     {
         if ($this->id === null) {
-            $this->id = Uuid::v4();  
+            $this->id = Uuid::v4()->toRfc4122();
         }
     }
 
-    public function getId(): ?Uuid
+    public function getId(): ?string
     {
         return $this->id;
     }
 
-    public function setId(Uuid $id): static
+    public function setId(string $id): static
     {
         $this->id = $id;
         return $this;
     }
+
     public function getUser(): ?User
     {
         return $this->user;
@@ -186,7 +176,8 @@ public function setTag(?Tag $tag): static
     {
         return $this->description;
     }
-        public function getRate(): ?int
+
+    public function getRate(): ?int
     {
         return $this->rate;
     }
@@ -195,5 +186,16 @@ public function setTag(?Tag $tag): static
     {
         $this->rate = $rate;
         return $this;
-}
+    }
+
+    public function getTag(): ?Tag
+    {
+        return $this->tag;
+    }
+
+    public function setTag(?Tag $tag): static
+    {
+        $this->tag = $tag;
+        return $this;
+    }
 }

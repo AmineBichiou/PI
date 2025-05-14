@@ -14,7 +14,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use ConsoleTVs\Profanity\Builder as Profanity;
 use StatutReclamation;
-use Symfony\Component\Uid\Uuid;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Entity\Tag;
 use Gemini;
@@ -379,7 +378,7 @@ class ReclamationController extends AbstractController
     }
 
 
-private function assignTagToReclamation(EntityManagerInterface $entityManager, Uuid $id): ?string
+private function assignTagToReclamation(EntityManagerInterface $entityManager, string $id): ?string
 {
     $reclamation = $entityManager->getRepository(Reclamations::class)->find($id);
     if (!$reclamation) {

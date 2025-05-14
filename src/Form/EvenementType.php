@@ -15,9 +15,8 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
-use Symfony\Component\Validator\Constraints\File;
-
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Validator\Constraints\File;
 
 class EvenementType extends AbstractType
 {
@@ -40,9 +39,10 @@ class EvenementType extends AbstractType
                     'Formation' => TypeEvenement::FORMATION,
                     'Conférence' => TypeEvenement::CONFERENCE,
                 ],
-                'choice_label' => fn($choice) => $choice->label(),
+                'choice_label' => fn(TypeEvenement $choice) => $choice->label(),
                 'choice_value' => fn(?TypeEvenement $enum) => $enum?->value,
                 'placeholder' => 'Sélectionnez un type',
+                'required' => false,
                 'attr' => ['class' => 'form-control'],
             ])
             ->add('statut', ChoiceType::class, [
@@ -52,9 +52,10 @@ class EvenementType extends AbstractType
                     'Annulé' => StatutEvenement::ANNULE,
                     'Terminé' => StatutEvenement::TERMINE,
                 ],
-                'choice_label' => fn($choice) => $choice->label(),
+                'choice_label' => fn(StatutEvenement $choice) => $choice->label(),
                 'choice_value' => fn(?StatutEvenement $enum) => $enum?->value,
                 'placeholder' => 'Sélectionnez un statut',
+                'required' => false,
                 'attr' => ['class' => 'form-control'],
             ])
             ->add('dateDebut', DateTimeType::class, [
@@ -89,10 +90,10 @@ class EvenementType extends AbstractType
                 'class' => Region::class,
                 'choice_label' => 'nom',
                 'multiple' => true,
-                'expanded' => true, // ou true pour des cases à cocher
+                'expanded' => true,
                 'attr' => ['class' => 'form-control'],
             ])
-            ->add('save',  SubmitType::class, [
+            ->add('save', SubmitType::class, [
                 'label' => 'Enregistrer',
                 'attr' => ['class' => 'btn btn-primary'],
             ]);
