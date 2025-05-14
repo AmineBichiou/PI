@@ -4,9 +4,9 @@ namespace App\Enum;
 
 enum StatutEvenement: string
 {
-    case A_VENIR = 'a_venir';
-    case ANNULE = 'annule';
-    case TERMINE = 'termine';
+    case A_VENIR = 'A_VENIR';
+    case ANNULE = 'ANNULE';
+    case TERMINE = 'TERMINE';
 
     public function label(): string
     {

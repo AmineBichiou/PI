@@ -4,9 +4,9 @@ namespace App\Enum;
 
 enum TypeEvenement: string
 {
-    case FOIRE = 'foire';
-    case FORMATION = 'formation';
-    case CONFERENCE = 'conference';
+    case FOIRE = 'FOIRE';
+    case FORMATION = 'FORMATION';
+    case CONFERENCE = 'CONFERENCE';
 
     public function label(): string
     {
