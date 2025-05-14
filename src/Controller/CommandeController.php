@@ -78,12 +78,10 @@ class CommandeController extends AbstractController
 
         $user = $security->getUser();
 
-
         if (!$user) {
             $this->addFlash('error', '⚠️ Vous devez être connecté pour finaliser votre commande.');
             return $this->redirectToRoute('paiement');
         }
-
 
         if (!$nom || !$numero || !$expiration || !$cvv) {
             $this->addFlash('error', '⚠️ Tous les champs sont obligatoires.');
@@ -95,35 +93,27 @@ class CommandeController extends AbstractController
             return $this->redirectToRoute('paiement');
         }
 
-
         if (!preg_match('/^(0[1-9]|1[0-2])\/\d{2}$/', $expiration)) {
             $this->addFlash('error', '⚠️ La date d\'expiration doit être au format MM/YY.');
             return $this->redirectToRoute('paiement');
         }
 
-
         [$mois, $annee] = explode('/', $expiration);
-        $annee = (int) $annee;
-        $mois = (int) $mois;
-
-
-        $annee = ($annee < 50) ? 2000 + $annee : 1900 + $annee;
+        $annee = ($annee < 50) ? 2000 + (int)$annee : 1900 + (int)$annee;
+        $mois = (int)$mois;
 
         $dateExpiration = \DateTime::createFromFormat('Y-m', "$annee-$mois");
         $dateActuelle = new \DateTime('first day of this month');
-
 
         if ($dateExpiration < $dateActuelle) {
             $this->addFlash('error', '⚠️ La carte est expirée.');
             return $this->redirectToRoute('paiement');
         }
 
-
         if (!is_numeric($cvv) || strlen((string) $cvv) !== 3) {
             $this->addFlash('error', '⚠️ Le CVV doit contenir exactement 3 chiffres.');
             return $this->redirectToRoute('paiement');
         }
-
 
         $commandes = $commandeRepository->findBy(['user' => $user]);
 
@@ -133,37 +123,25 @@ class CommandeController extends AbstractController
         }
 
         foreach ($commandes as $commande) {
-            $CommandesHistoriques = new CommandesHistoriques();
+            $commandeHist = new CommandesHistoriques();
 
+            // ✅ On met uniquement les champs valides dans la base finale
+            $commandeHist->setUtilisateur($user->getId());
+            $commandeHist->setDateAchat(new \DateTime());
+            $commandeHist->setPrixTotal($commande->getProduit()->getPrixUnitaire() * $commande->getQuantite());
 
-            $CommandesHistoriques->setProduitId($commande->getProduit()->getId());
-
-            $CommandesHistoriques->setNomProduit($commande->getProduit()->getNom());
-            $CommandesHistoriques->setProduitPrix($commande->getProduit()->getPrixUnitaire());
-
-
-            $CommandesHistoriques->setQuantite($commande->getQuantite());
             $produit = $commande->getProduit();
-            if ($produit) {
-                if (!$produit->diminuerQuantite($commande->getQuantite())) {
-                    $this->addFlash('error', '❌ Stock insuffisant pour le produit '.$produit->getNom());
-                    return $this->redirectToRoute('mon_panier');
-                }
-                $entityManager->persist($produit);
+            if ($produit && !$produit->diminuerQuantite($commande->getQuantite())) {
+                $this->addFlash('error', '❌ Stock insuffisant pour le produit ' . $produit->getNom());
+                return $this->redirectToRoute('mon_panier');
             }
 
-            $CommandesHistoriques->setPrixTotal($commande->getProduit()->getPrixUnitaire() * $commande->getQuantite());
-            $CommandesHistoriques->setUser($user);
-
-            $entityManager->persist($CommandesHistoriques);
-
-
+            $entityManager->persist($produit);
+            $entityManager->persist($commandeHist);
             $entityManager->remove($commande);
         }
 
-
         $entityManager->flush();
-
 
         $this->addFlash('success', '✅ Paiement effectué avec succès ! Commande enregistrée dans l\'historique.');
 
@@ -189,9 +167,10 @@ class CommandeController extends AbstractController
         }
 
         $historique = $entityManager->getRepository(CommandesHistoriques::class)->findBy(
-            ['user' => $user],
-            ['dateCommande' => 'DESC']
+            ['utilisateur' => $user->getId()],
+            ['dateAchat' => 'DESC']
         );
+
 
         return $this->render('commande/historique_commandes.html.twig', [
             'commandesFinalisees' => $historique
@@ -200,9 +179,16 @@ class CommandeController extends AbstractController
 
 
     #[Route('/commande/finaliser', name: 'finaliser_commande')]
-    public function finaliserCommande(EntityManagerInterface $entityManager, CommandeRepository $commandeRepository): Response
+    public function finaliserCommande(EntityManagerInterface $entityManager, CommandeRepository $commandeRepository, Security $security): Response
     {
-        $commandes = $commandeRepository->findAll();
+        $user = $security->getUser();
+
+        if (!$user) {
+            $this->addFlash('error', 'Vous devez être connecté pour finaliser votre commande.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $commandes = $commandeRepository->findBy(['user' => $user]);
 
         if (empty($commandes)) {
             $this->addFlash('error', 'Votre panier est vide.');
@@ -210,13 +196,13 @@ class CommandeController extends AbstractController
         }
 
         foreach ($commandes as $commande) {
-            $CommandesHistoriques = new CommandesHistoriques();
-            $CommandesHistoriques->setNomProduit($commande->getProduit()->getNom());
-            $CommandesHistoriques->setQuantite($commande->getQuantite());
-            $CommandesHistoriques->setPrixTotal($commande->getProduit()->getPrixUnitaire() * $commande->getQuantite());
+            $commandeHist = new CommandesHistoriques();
+            $commandeHist->setUtilisateur($user);
+            $commandeHist->setDateAchat(new \DateTime());
+            $commandeHist->setPrixTotal($commande->getProduit()->getPrixUnitaire() * $commande->getQuantite());
 
-            $entityManager->persist($CommandesHistoriques);
-
+            $entityManager->persist($commandeHist);
+            $entityManager->remove($commande);
         }
 
         $entityManager->flush();
@@ -224,6 +210,7 @@ class CommandeController extends AbstractController
         $this->addFlash('success', 'Votre commande a été finalisée avec succès ! ✅');
         return $this->redirectToRoute('confirmation_commande');
     }
+
 
     #[Route('/commande/confirmation', name: 'confirmation_commande')]
     public function confirmationCommande(): Response

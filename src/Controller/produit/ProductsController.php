@@ -16,10 +16,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Knp\Component\Pager\PaginatorInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Pagerfanta\Pagerfanta;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
 class ProductsController extends AbstractController
 {
@@ -42,55 +42,20 @@ class ProductsController extends AbstractController
         $produit = new Produit();
         $form = $this->createForm(ProductType::class, $produit, ['attr' => ['novalidate' => 'novalidate']]);
         $form->handleRequest($request);
+
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->VhImageUpload($form, $produit);
+            $this->handleImageUploadFromUrl($form, $produit);
             $produit->setUser($this->getUser());
             $this->entityManager->persist($produit);
             $this->entityManager->flush();
             $this->addFlash('success', 'Product added successfully!');
             return $this->redirectToRoute('liste_produits');
         }
+
         return $this->render('produit/productcreate.html.twig', [
             'form' => $form->createView(),
             'produit' => $produit,
         ]);
-    }
-
-    private function VhImageUpload($form, Produit $product): void
-    {
-        if (!$form->isSubmitted() || !$form->isValid()) {
-            $this->addFlash('error', 'Form is not submitted or invalid.');
-            return;
-        }
-
-        if (!$form->has('imageFile')) {
-            throw new \RuntimeException('The form does not have an "imageFile" field.');
-        }
-        $imageFile = $form->get('imageFile')->getData();
-        if ($imageFile) {
-            if (!$imageFile instanceof UploadedFile) {
-                throw new \RuntimeException(sprintf(
-                    'Expected UploadedFile, got %s instead.',
-                    is_object($imageFile) ? get_class($imageFile) : gettype($imageFile)
-                ));
-            }
-
-            if ($imageFile->getError() !== UPLOAD_ERR_OK) {
-                $this->addFlash('error', 'File upload error: ' . $imageFile->getErrorMessage());
-                return;
-            }
-
-            $extension = strtolower($imageFile->getClientOriginalExtension());
-            $allowed = ['jpg', 'jpeg', 'png', 'gif'];
-
-            if (in_array($extension, $allowed)) {
-                $product->setImageFile($imageFile);
-                $newFilename = uniqid() . '.' . $extension;
-                $product->setImageName($newFilename);
-            } else {
-                $this->addFlash('error', 'Invalid image format. Allowed formats: jpg, jpeg, png, gif.');
-            }
-        }
     }
 
     #[Route('/produit', name: 'liste_produits')]
@@ -110,7 +75,7 @@ class ProductsController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->vhImageUpload($form, $product); // Fixed variable name from $produit to $product
+            $this->handleImageUploadFromUrl($form, $product);
             $this->entityManager->flush();
             $this->addFlash('success', 'Product updated successfully!');
             return $this->redirectToRoute('liste_produits');
@@ -158,45 +123,23 @@ class ProductsController extends AbstractController
             return $this->redirectToRoute('shop_produits', ['page' => 1]);
         }
 
-
         return $this->render('homepage/productPage.html.twig', [
             'pager' => $pagerfanta,
             'categories' => $categories,
         ]);
     }
-    
 
-    private function handleImageUpload($form, Produit $product): void
-    {
-        $imageFile = $form->get('urlImageProduit')->getData();
-        if ($imageFile) {
-            $extension = strtolower($imageFile->getClientOriginalExtension());
-            $allowed = ['jpg', 'jpeg', 'png', 'gif'];
-
-            if (in_array($extension, $allowed)) {
-                $newFilename = uniqid() . '.' . $extension;
-                try {
-                    $imageFile->move($this->getParameter('images_directory'), $newFilename);
-                    $product->setUrlImageProduit('uploads/images/' . $newFilename);
-                } catch (FileException $e) {
-                    $this->addFlash('error', 'Image upload failed.');
-                }
-            } else {
-                $this->addFlash('error', 'Invalid image format. Allowed: jpg, jpeg, png, gif.');
-            }
-        }
-    }
     #[Route('/shop/details', name: 'shopdetails')]
-public function shopProduitss(Request $request, EntityManagerInterface $entityManager): Response
-{
-    $produits = $entityManager->getRepository(Produit::class)->findAll();
-    $categories = $entityManager->getRepository(Categorie::class)->findAll();
+    public function shopProduitss(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $produits = $entityManager->getRepository(Produit::class)->findAll();
+        $categories = $entityManager->getRepository(Categorie::class)->findAll();
 
-    return $this->render('homepage/shop-details.html.twig', [
-        'produits' => $produits,
-        'categories' => $categories,
-    ]);
-}
+        return $this->render('homepage/shop-details.html.twig', [
+            'produits' => $produits,
+            'categories' => $categories,
+        ]);
+    }
 
     #[Route('/produit/aiml', name: 'aiml_api', methods: ['POST'])]
     public function callAIMLApi(Request $request, HttpClientInterface $httpClient): JsonResponse
@@ -453,7 +396,6 @@ public function shopProduitss(Request $request, EntityManagerInterface $entityMa
             ->from(Produit::class, 'p')
             ->orderBy('p.id', 'DESC');
 
-        // Apply filters
         $searchTerm = $request->query->get('search');
         $priceMax = $request->query->get('price_max');
         $categories = $request->query->get('categories') ? explode(',', $request->query->get('categories')) : [];
@@ -480,7 +422,7 @@ public function shopProduitss(Request $request, EntityManagerInterface $entityMa
             'nom' => $produit->getNom(),
             'description' => $produit->getDescription(),
             'prixUnitaire' => $produit->getPrixUnitaire(),
-            'urlImageProduit' => $this->vichUploaderAsset($produit, 'imageFile'), // Adjust based on your setup
+            'urlImageProduit' => $produit->getUrlImageProduit(),
             'categorie' => $produit->getCategorie()->getNom(),
             'quantite' => $produit->getQuantite(),
         ], $products);
@@ -488,14 +430,8 @@ public function shopProduitss(Request $request, EntityManagerInterface $entityMa
         return new JsonResponse(['products' => $productData]);
     }
 
-    private function vichUploaderAsset($entity, $fieldName): string
-    {
-        $helper = $this->container->get('vich_uploader.templating.helper.uploader_helper');
-        return $helper->asset($entity, $fieldName) ?? '';
-    }
-
     #[Route('/api/generate-description/{query}', name: 'api_generate_description', methods: ['POST'])]
-    public function generateDescription(Request $request,string $query): JsonResponse
+    public function generateDescription(Request $request, string $query): JsonResponse
     {
         $defaultPayload = [
             "context" => "Description concise (maximum 3 lignes) d'un produit agricole pour un site e-commerce. Pas d'introduction ni de texte générique, seulement la description du produit.",
@@ -541,7 +477,6 @@ public function shopProduitss(Request $request, EntityManagerInterface $entityMa
         }
     }
 
-
     private function extractDescription(array $apiResponse): string
     {
         if (
@@ -556,10 +491,34 @@ public function shopProduitss(Request $request, EntityManagerInterface $entityMa
         }
 
         return "Aucune description valide trouvée.";
+    }
 
+    private function handleImageUploadFromUrl($form, Produit $product): void
+    {
+        $imageUrl = $form->get('urlImageProduit')->getData();
 
+        // Skip if no URL is provided
+        if (empty($imageUrl)) {
+            return;
+        }
 
+        // Validate URL
+        if (!filter_var($imageUrl, FILTER_VALIDATE_URL)) {
+            $this->addFlash('error', 'Invalid URL provided.');
+            return;
+        }
 
-}
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+        $pathParts = pathinfo(parse_url($imageUrl, PHP_URL_PATH));
+        $extension = isset($pathParts['extension']) ? strtolower($pathParts['extension']) : '';
 
+        // Validate extension
+        if (!in_array($extension, $allowedExtensions)) {
+            $this->addFlash('error', 'Invalid image format. Allowed formats: ' . implode(', ', $allowedExtensions));
+            return;
+        }
+
+        // Set the URL directly
+        $product->setUrlImageProduit($imageUrl);
+    }
 }
