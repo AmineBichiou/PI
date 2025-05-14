@@ -31,11 +31,11 @@ class Evenement
     #[Assert\Length(max: 1000, maxMessage: 'La description ne peut pas dépasser 1000 caractères.')]
     private ?string $description = null;
 
-    #[ORM\Column(length: 20)]
-    private ?string $type = null;
+    #[ORM\Column(type: 'string', enumType: TypeEvenement::class, nullable: true)]
+    private ?TypeEvenement $type = null;
 
-    #[ORM\Column(length: 20)]
-    private ?string $statut = null;
+    #[ORM\Column(type: 'string', enumType: StatutEvenement::class, nullable: true)]
+    private ?StatutEvenement $statut = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     #[Assert\NotBlank(message: 'La date de début est obligatoire.')]
@@ -94,23 +94,23 @@ class Evenement
 
     public function getType(): ?TypeEvenement
     {
-        return $this->type ? TypeEvenement::tryFrom($this->type) : null;
+        return $this->type;
     }
 
     public function setType(?TypeEvenement $type): self
     {
-        $this->type = $type?->value;
+        $this->type = $type;
         return $this;
     }
 
     public function getStatut(): ?StatutEvenement
     {
-        return $this->statut ? StatutEvenement::tryFrom($this->statut) : null;
+        return $this->statut;
     }
 
     public function setStatut(?StatutEvenement $statut): self
     {
-        $this->statut = $statut?->value;
+        $this->statut = $statut;
         return $this;
     }
 
