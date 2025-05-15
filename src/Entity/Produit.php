@@ -12,7 +12,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity(repositoryClass: ProduitRepository::class)]
-#[Vich\Uploadable] // Add this attribute
+#[Vich\Uploadable] // Marks the entity as uploadable
 class Produit
 {
     #[ORM\Id]
@@ -59,49 +59,24 @@ class Produit
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
-
     #[ORM\OneToMany(targetEntity: Stock::class, mappedBy: 'produit')]
     private Collection $stocks;
-    
-    
-    public function getStocks(): Collection
-    {
-        return $this->stocks;
-    }
-    
-    public function addStock(Stock $stock): self
-    {
-        if (!$this->stocks->contains($stock)) {
-            $this->stocks->add($stock);
-            $stock->setProduit($this);
-        }
-        return $this;
-    }
-    
-    public function removeStock(Stock $stock): self
-    {
-        if ($this->stocks->removeElement($stock)) {
-            if ($stock->getProduit() === $this) {
-                $stock->setProduit(null);
-            }
-        }
-        return $this;
-    }
+
+    #[ORM\OneToMany(targetEntity: Commentaire::class, mappedBy: 'produit', cascade: ['persist', 'remove'])]
+    private Collection $commentaires;
+
     #[ORM\Column(type: "decimal", precision: 2, scale: 1, nullable: true)]
     private ?float $rate = null;
 
-
-    // One-to-Many relationship with Commentaire
-    #[ORM\OneToMany(targetEntity: Commentaire::class, mappedBy: 'produit', cascade: ['persist', 'remove'])]
-    private $commentaires;
+    #[ORM\Column(type: "datetime", nullable: true)]
+    private ?\DateTimeInterface $updatedAt = null;
 
     public function __construct()
     {
         $this->id = Uuid::v4();
         $this->dateCreation = new \DateTime();
         $this->stocks = new ArrayCollection();
-
-        $this->commentaires = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->commentaires = new ArrayCollection();
     }
 
     public function getId(): ?Uuid
@@ -145,9 +120,9 @@ class Produit
     public function setImageFile(?File $imageFile = null): void
     {
         $this->imageFile = $imageFile;
-
         if (null !== $imageFile) {
-            $this->dateCreation = new \DateTimeImmutable();
+            // Use updatedAt instead of dateCreation for VichUploader
+            $this->updatedAt = new \DateTimeImmutable();
         }
     }
 
@@ -156,7 +131,7 @@ class Produit
         return $this->imageFile;
     }
 
-    public function setImageName(?string $imageName): void
+    public function setUrlImageProduit(?string $imageName): void
     {
         $this->imageName = $imageName;
     }
@@ -192,6 +167,7 @@ class Produit
         $this->quantite = $quantite;
         return $this;
     }
+
     public function increaseQuantite(int $amount = 1): self
     {
         $this->quantite += $amount;
@@ -220,10 +196,31 @@ class Produit
         return $this;
     }
 
-    /**
-     * @return \Doctrine\Common\Collections\Collection|\App\Entity\Commentaire[]
-     */
-    public function getCommentaires()
+    public function getStocks(): Collection
+    {
+        return $this->stocks;
+    }
+
+    public function addStock(Stock $stock): self
+    {
+        if (!$this->stocks->contains($stock)) {
+            $this->stocks->add($stock);
+            $stock->setProduit($this);
+        }
+        return $this;
+    }
+
+    public function removeStock(Stock $stock): self
+    {
+        if ($this->stocks->removeElement($stock)) {
+            if ($stock->getProduit() === $this) {
+                $stock->setProduit(null);
+            }
+        }
+        return $this;
+    }
+
+    public function getCommentaires(): Collection
     {
         return $this->commentaires;
     }
@@ -231,7 +228,7 @@ class Produit
     public function addCommentaire(Commentaire $commentaire): self
     {
         if (!$this->commentaires->contains($commentaire)) {
-            $this->commentaires[] = $commentaire;
+            $this->commentaires->add($commentaire);
             $commentaire->setProduit($this);
         }
         return $this;
@@ -240,7 +237,6 @@ class Produit
     public function removeCommentaire(Commentaire $commentaire): self
     {
         if ($this->commentaires->removeElement($commentaire)) {
-            // Set the owning side to null (unless already changed)
             if ($commentaire->getProduit() === $this) {
                 $commentaire->setProduit(null);
             }
@@ -252,30 +248,29 @@ class Produit
     {
         return "Produit: {$this->nom}, Prix: {$this->prixUnitaire} TND";
     }
-   
-    public function diminuerQuantite(int $quantite): bool
-{
-    if ($this->quantite >= $quantite) {
-        $this->quantite -= $quantite;
-        return true;
-    }
-    return false; // Quantité insuffisante
-}
 
-public function _toString(): string
-{
-    return $this->nom;
-}
+    public function diminuerQuantite(int $quantite): bool
+    {
+        if ($this->quantite >= $quantite) {
+            $this->quantite -= $quantite;
+            return true;
+        }
+        return false; // Quantité insuffisante
+    }
 
     public function __toString(): string
     {
-        return sprintf(
-            $this->nom,
-            $this->description ?? 'Aucune description',
-            $this->prixUnitaire,
-            $this->quantite,
-            $this->categorie ? $this->categorie->getNom() : 'Non spécifiée',
-            $this->dateCreation->format('Y-m-d H:i:s'),
-        );
+        return $this->nom;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(?\DateTimeInterface $updatedAt): self
+    {
+        $this->updatedAt = $updatedAt;
+        return $this;
     }
 }

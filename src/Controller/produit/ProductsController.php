@@ -19,7 +19,6 @@ use Knp\Component\Pager\PaginatorInterface;
 use Pagerfanta\Pagerfanta;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
 class ProductsController extends AbstractController
 {
@@ -44,7 +43,6 @@ class ProductsController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->handleImageUploadFromUrl($form, $produit);
             $produit->setUser($this->getUser());
             $this->entityManager->persist($produit);
             $this->entityManager->flush();
@@ -75,7 +73,6 @@ class ProductsController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->handleImageUploadFromUrl($form, $product);
             $this->entityManager->flush();
             $this->addFlash('success', 'Product updated successfully!');
             return $this->redirectToRoute('liste_produits');
@@ -199,7 +196,6 @@ class ProductsController extends AbstractController
             'nom' => $produit->getNom(),
             'description' => $produit->getDescription(),
             'prixUnitaire' => $produit->getPrixUnitaire(),
-            'urlImageProduit' => $produit->getUrlImageProduit(),
             'categorie' => $produit->getCategorie()->getNom(),
         ], $produits);
 
@@ -228,7 +224,6 @@ class ProductsController extends AbstractController
                 'nom' => $produit->getNom(),
                 'description' => $produit->getDescription(),
                 'prixUnitaire' => $produit->getPrixUnitaire(),
-                'urlImageProduit' => $produit->getUrlImageProduit(),
                 'categorie' => $produit->getCategorie()->getNom(),
             ], $produitsPhares);
 
@@ -422,7 +417,6 @@ class ProductsController extends AbstractController
             'nom' => $produit->getNom(),
             'description' => $produit->getDescription(),
             'prixUnitaire' => $produit->getPrixUnitaire(),
-            'urlImageProduit' => $produit->getUrlImageProduit(),
             'categorie' => $produit->getCategorie()->getNom(),
             'quantite' => $produit->getQuantite(),
         ], $products);
@@ -491,34 +485,5 @@ class ProductsController extends AbstractController
         }
 
         return "Aucune description valide trouvée.";
-    }
-
-    private function handleImageUploadFromUrl($form, Produit $product): void
-    {
-        $imageUrl = $form->get('urlImageProduit')->getData();
-
-        // Skip if no URL is provided
-        if (empty($imageUrl)) {
-            return;
-        }
-
-        // Validate URL
-        if (!filter_var($imageUrl, FILTER_VALIDATE_URL)) {
-            $this->addFlash('error', 'Invalid URL provided.');
-            return;
-        }
-
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
-        $pathParts = pathinfo(parse_url($imageUrl, PHP_URL_PATH));
-        $extension = isset($pathParts['extension']) ? strtolower($pathParts['extension']) : '';
-
-        // Validate extension
-        if (!in_array($extension, $allowedExtensions)) {
-            $this->addFlash('error', 'Invalid image format. Allowed formats: ' . implode(', ', $allowedExtensions));
-            return;
-        }
-
-        // Set the URL directly
-        $product->setUrlImageProduit($imageUrl);
     }
 }

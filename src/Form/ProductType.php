@@ -15,7 +15,6 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
-use Vich\UploaderBundle\Form\Type\VichImageType;
 
 class ProductType extends AbstractType
 {
@@ -64,13 +63,6 @@ class ProductType extends AbstractType
                         'maxMessage' => 'La description ne peut pas dépasser {{ limit }} caractères.',
                     ]),
                 ],
-            ])
-            ->add('imageFile', VichImageType::class, [
-                'label' => 'Image du produit',
-                'required' => !$options['is_edit'],
-                'download_uri' => false,
-                'allow_delete' => false,
-                'image_uri' => false,
             ])
             ->add('categorie', EntityType::class, [
                 'class' => Categorie::class,
