@@ -3,7 +3,6 @@
 namespace App\Form;
 
 use App\Entity\Entrepot;
-use App\Entity\Fournisseur;
 use App\Entity\Produit;
 use App\Entity\Stock;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -40,16 +39,7 @@ public function buildForm(FormBuilderInterface $builder, array $options): void
             'required' => false,
             
         ])
-        ->add('fournisseurs', EntityType::class, [
-            'class' => Fournisseur::class,
-            'choice_label' => 'nom',
-            'multiple' => true,
-            'expanded' => true,
-            'constraints' => [
-                new NotBlank(['message' => 'Vous devez sélectionner au moins un fournisseur.']),
-            ],
-            'attr' => ['class' => 'form-control']
-        ])
+        
         ->add('seuilAlert', IntegerType::class, [
             'label' => 'Seuil d\'alerte',
             'required' => false,

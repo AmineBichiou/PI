@@ -37,11 +37,6 @@ class Produit
     #[Assert\Positive(message: "Le prix doit être un nombre positif.")]
     private float $prixUnitaire;
 
-    #[Vich\UploadableField(mapping: 'product_image', fileNameProperty: 'imageName')]
-    private ?File $imageFile = null;
-
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    private ?string $imageName = null;
 
     #[ORM\Column(type: "datetime")]
     private \DateTimeInterface $dateCreation;
@@ -117,28 +112,37 @@ class Produit
         return $this;
     }
 
-    public function setImageFile(?File $imageFile = null): void
+ #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $imageName = null;
+
+    #[Vich\UploadableField(mapping: 'product_image', fileNameProperty: 'imageName')]
+    private ?File $imageFile = null;
+
+    // Getter for imageName
+    public function getImageName(): ?string
     {
-        $this->imageFile = $imageFile;
-        if (null !== $imageFile) {
-            // Use updatedAt instead of dateCreation for VichUploader
-            $this->updatedAt = new \DateTimeImmutable();
-        }
+        return $this->imageName;
     }
 
+    // Corrected Setter for imageName
+    public function setImageName(?string $imageName): void
+    {
+        $this->imageName = $imageName;
+    }
+
+    // Getter for imageFile
     public function getImageFile(): ?File
     {
         return $this->imageFile;
     }
 
-    public function setUrlImageProduit(?string $imageName): void
+    // Setter for imageFile
+    public function setImageFile(?File $imageFile = null): void
     {
-        $this->imageName = $imageName;
-    }
-
-    public function getImageName(): ?string
-    {
-        return $this->imageName;
+        $this->imageFile = $imageFile;
+        if (null !== $imageFile) {
+            $this->updatedAt = new \DateTimeImmutable();
+        }
     }
 
     public function getDateCreation(): \DateTimeInterface

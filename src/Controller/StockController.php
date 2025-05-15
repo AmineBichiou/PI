@@ -42,13 +42,11 @@ public function index(
     // Récupérer les catégories, entrepôts et fournisseurs pour les filtres
     $categories = $entityManager->getRepository(Categorie::class)->findAll();
     $entrepots = $entityManager->getRepository(Entrepot::class)->findAll();
-    $fournisseurs = $entityManager->getRepository(Fournisseur::class)->findAll();
 
     return $this->render('stock/index.html.twig', [
         'stocks' => $stocks,
         'categories' => $categories,
         'entrepots' => $entrepots,
-        'fournisseurs' => $fournisseurs,
     ]);
 }
 // src/Controller/StockController.php

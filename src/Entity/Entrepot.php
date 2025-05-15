@@ -14,11 +14,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 #[UniqueEntity(fields: ['nom'], message: 'Un entrepôt avec ce nom existe déjà.')]
 class Entrepot
 {
-    #[ORM\Id]
-    #[ORM\Column(type: 'uuid', unique: true)]
-    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
-    #[ORM\CustomIdGenerator(class: 'Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator')]
-    private ?Uuid $id = null;
+   #[ORM\Id]
+    #[ORM\Column(type: 'string', length: 36, unique: true)]
+    #[ORM\GeneratedValue(strategy: 'NONE')]
+    private ?string $id = null;
 
     #[ORM\Column(length: 255, unique: true)]
     #[Assert\NotBlank(message: 'Le nom de l\'entrepôt ne peut pas être vide.')]
@@ -65,6 +64,8 @@ class Entrepot
 
     public function __construct()
     {
+                $this->id = Uuid::v4()->toRfc4122(); // Generate UUID on construction
+
         $this->stocks = new ArrayCollection();
     }
 
@@ -75,6 +76,7 @@ class Entrepot
     {
         return $this->stocks;
     }
+     
 
     public function addStock(Stock $stock): self
     {

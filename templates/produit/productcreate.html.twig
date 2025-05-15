@@ -36,7 +36,7 @@
             gap: 15px;
         }
 
-        .label-nom, .label-prix, .label-description, .label-categorie, .label-quantite {
+        .label-nom, .label-prix, .label-description, .label-categorie, .label-quantite, .label-image {
             font-weight: 600;
             color: #333;
             margin-bottom: 5px;
@@ -99,13 +99,13 @@
             box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
         }
 
-        .description-container {
+        .description-container, .image-container {
             display: flex;
             flex-direction: column;
             width: 100%;
         }
 
-        .ai-generate-btn {
+        .ai-generate-btn, .upload-image-btn {
             background-color: #81c408;
             color: #fff;
             border: none;
@@ -122,8 +122,24 @@
             transition: background-color 0.3s ease;
         }
 
-        .ai-generate-btn:hover {
+        .ai-generate-btn:hover, .upload-image-btn:hover {
             background-color: #6aa306;
+        }
+
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin-top: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .image-preview.show {
+            display: block;
+        }
+
+        .image-file-input {
+            display: none;
         }
     </style>
 {% endblock %}
@@ -134,7 +150,7 @@
         <div class="content-page">
             <div class="display-container">
                 <div class="container-form">
-                    {{ form_start(form, {'attr': {'class': 'produit-form'}}) }}
+                    {{ form_start(form, {'attr': {'class': 'produit-form', 'enctype': 'multipart/form-data'}}) }}
                     
                     <div class="nom-container">
                         <div class="label-nom">{{ form_label(form.nom) }}</div>
@@ -194,6 +210,25 @@
                         </div>
                     </div>
 
+                    <div class="image-container">
+                        <div class="label-image">{{ form_label(form.imageFile) }}</div>
+                        <div class="mb-3">
+                            {{ form_widget(form.imageFile, {'attr': {'class': 'image-file-input', 'id': 'product_imageFile_file'}}) }}
+                            <button type="button" id="upload-image-btn" class="upload-image-btn">
+                                <span class="upload-icon">📷</span> Upload Image
+                            </button>
+                            {% if produit.imageName %}
+                                <img id="image-preview" class="image-preview show" src="{{ produit.imageName }}" alt="Current Image">
+                            {% else %}
+                                <img id="image-preview" class="image-preview" src="#" alt="Image Preview">
+                            {% endif %}
+                            <div class="form-error {% if form.imageFile.vars.errors|length > 0 %}show{% endif %}" 
+                                 id="{{ form.imageFile.vars.id }}_error">
+                                {{ form_errors(form.imageFile) }}
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         {{ form_widget(form.save, {'attr': {'class': 'submit-button'}}) }}
                     </div>
@@ -205,38 +240,72 @@
     </main>
 
     <script>
-        document.getElementById('generate-description-btn').addEventListener('click', function() {
-            const productName = document.getElementById('{{ form.nom.vars.id }}').value.trim();
-            if (!productName) {
-                alert('Veuillez entrer un nom de produit.');
-                return;
+        document.addEventListener('DOMContentLoaded', function() {
+            // AI Description Generation
+            const generateButton = document.getElementById('generate-description-btn');
+            if (generateButton) {
+                generateButton.addEventListener('click', function() {
+                    const productName = document.getElementById('{{ form.nom.vars.id }}').value.trim();
+                    if (!productName) {
+                        alert('Veuillez entrer un nom de produit.');
+                        return;
+                    }
+
+                    fetch(`/api/generate-description/${encodeURIComponent(productName)}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Erreur réseau.');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            document.getElementById('{{ form.description.vars.id }}').value = data.description;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur:', error);
+                        alert('Une erreur est survenue lors de la génération de la description.');
+                    });
+                });
             }
 
-            fetch(`/api/generate-description/${encodeURIComponent(productName)}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({})
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Erreur réseau.');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    document.getElementById('{{ form.description.vars.id }}').value = data.description;
-                }
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-                alert('Une erreur est survenue lors de la génération de la description.');
-            });
+            // Image Upload and Preview
+            const uploadButton = document.getElementById('upload-image-btn');
+            const fileInput = document.getElementById('product_imageFile_file');
+            const imagePreview = document.getElementById('image-preview');
+
+            if (uploadButton && fileInput) {
+                uploadButton.addEventListener('click', () => {
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', () => {
+                    const file = fileInput.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            imagePreview.src = e.target.result;
+                            imagePreview.classList.add('show');
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        imagePreview.src = '#';
+                        imagePreview.classList.remove('show');
+                    }
+                });
+            } else {
+                console.error('Upload button or file input not found');
+            }
         });
     </script>
 {% endblock %}

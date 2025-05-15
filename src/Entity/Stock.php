@@ -15,10 +15,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Stock
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'uuid', unique: true)]
-    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
-    #[ORM\CustomIdGenerator(class: 'Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator')]
-    private ?Uuid $id = null;
+    #[ORM\Column(type: 'string', length: 36, unique: true)]
+    #[ORM\GeneratedValue(strategy: 'NONE')]
+    private ?string $id = null;
 
     #[ORM\ManyToOne(targetEntity: Produit::class, inversedBy: 'stocks')]
     #[ORM\JoinColumn(nullable: false)]
@@ -36,9 +35,6 @@ class Stock
 
     private ?\DateTimeInterface $date_sortie = null;
 
-    #[ORM\ManyToMany(targetEntity: Fournisseur::class, mappedBy: 'stocks')]
-    #[Assert\Count(min: 1, minMessage: 'Vous devez sélectionner au moins un fournisseur.')]
-    private Collection $fournisseurs;
 
     #[ORM\ManyToMany(targetEntity: Entrepot::class, inversedBy: 'stocks')]
     #[ORM\JoinTable(name: 'stock_entrepot')]
@@ -51,7 +47,6 @@ class Stock
 
     public function __construct()
     {
-        $this->fournisseurs = new ArrayCollection();
         $this->entrepots = new ArrayCollection();
     }
     public function toArray(): array
@@ -103,27 +98,7 @@ class Stock
         return $this;
     }
 
-    public function getFournisseurs(): Collection
-    {
-        return $this->fournisseurs;
-    }
 
-    public function addFournisseur(Fournisseur $fournisseur): self
-    {
-        if (!$this->fournisseurs->contains($fournisseur)) {
-            $this->fournisseurs->add($fournisseur);
-            $fournisseur->addStock($this);
-        }
-        return $this;
-    }
-
-    public function removeFournisseur(Fournisseur $fournisseur): self
-    {
-        if ($this->fournisseurs->removeElement($fournisseur)) {
-            $fournisseur->removeStock($this);
-        }
-        return $this;
-    }
 
     public function getEntrepots(): Collection
     {

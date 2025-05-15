@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Vich\UploaderBundle\Form\Type\VichImageType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -79,6 +80,12 @@ class ProductType extends AbstractType
                         'message' => 'Veuillez sélectionner une catégorie.',
                     ]),
                 ],
+            ])
+            ->add('imageFile', VichImageType::class, [
+                'label' => 'Image du produit',
+                'required' => false,
+                'allow_delete' => false,
+                'download_uri' => false,
             ])
             ->add('save', SubmitType::class, [
                 'label' => 'Soumettre',

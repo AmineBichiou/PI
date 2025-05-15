@@ -15,10 +15,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
-use Knp\Component\Pager\PaginatorInterface;
 use Pagerfanta\Pagerfanta;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\HttpFoundation\File\File;
 
 class ProductsController extends AbstractController
 {
@@ -26,13 +28,20 @@ class ProductsController extends AbstractController
     private $userRepository;
     private $httpClient;
     private $commentaireRepository;
+    private $slugger;
 
-    public function __construct(EntityManagerInterface $entityManager, UserRepository $userRepository, HttpClientInterface $httpClient, CommentaireRepository $commentaireRepository)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        UserRepository $userRepository,
+        HttpClientInterface $httpClient,
+        CommentaireRepository $commentaireRepository,
+        SluggerInterface $slugger
+    ) {
         $this->entityManager = $entityManager;
         $this->userRepository = $userRepository;
         $this->httpClient = $httpClient;
         $this->commentaireRepository = $commentaireRepository;
+        $this->slugger = $slugger;
     }
 
     #[Route('/produit/ajout', name: 'ajout_produit')]
@@ -43,7 +52,9 @@ class ProductsController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $this->handleImageUpload($form, $produit);
             $produit->setUser($this->getUser());
+            $produit->getDateCreation(new \DateTime());
             $this->entityManager->persist($produit);
             $this->entityManager->flush();
             $this->addFlash('success', 'Product added successfully!');
@@ -73,6 +84,7 @@ class ProductsController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $this->handleImageUpload($form, $product);
             $this->entityManager->flush();
             $this->addFlash('success', 'Product updated successfully!');
             return $this->redirectToRoute('liste_produits');
@@ -141,7 +153,7 @@ class ProductsController extends AbstractController
     #[Route('/produit/aiml', name: 'aiml_api', methods: ['POST'])]
     public function callAIMLApi(Request $request, HttpClientInterface $httpClient): JsonResponse
     {
-        $apiKey = '0fd268ea35df4e5f97efa439f90c761d';
+        $apiKey = $this->getParameter('magicapi_key');
         $baseUrl = "https://api.aimlapi.com/v1";
         $data = json_decode($request->getContent(), true);
 
@@ -188,7 +200,7 @@ class ProductsController extends AbstractController
     #[Route('/produit/featured', name: 'produits_featured', methods: ['GET'])]
     public function getFeaturedProducts(): JsonResponse
     {
-        $apiKey = '0fd268ea35df4e5f97efa439f90c761d';
+        $apiKey = $this->getParameter('magicapi_key');
         $baseUrl = "https://api.aimlapi.com/v1";
 
         $produits = $this->entityManager->getRepository(Produit::class)->findAll();
@@ -196,6 +208,7 @@ class ProductsController extends AbstractController
             'nom' => $produit->getNom(),
             'description' => $produit->getDescription(),
             'prixUnitaire' => $produit->getPrixUnitaire(),
+            'imageName' => $produit->getImageName(),
             'categorie' => $produit->getCategorie()->getNom(),
         ], $produits);
 
@@ -224,6 +237,7 @@ class ProductsController extends AbstractController
                 'nom' => $produit->getNom(),
                 'description' => $produit->getDescription(),
                 'prixUnitaire' => $produit->getPrixUnitaire(),
+                'imageName' => $produit->getImageName(),
                 'categorie' => $produit->getCategorie()->getNom(),
             ], $produitsPhares);
 
@@ -269,7 +283,20 @@ class ProductsController extends AbstractController
                 $description = "Découvrez {$nomProduit}, un produit frais et naturel de la catégorie des fruits et légumes.";
             }
 
-            return new JsonResponse(['description' => $description]);
+            $imageUrl = $product['image_front_url'] ?? $product['image_url'] ?? null;
+            if ($imageUrl) {
+                try {
+                    $cloudUrl = $this->uploadImageUrlToMagicApi($imageUrl);
+                    $imageUrl = $cloudUrl;
+                } catch (\Exception $e) {
+                    error_log("Failed to upload Open Food Facts image for $nomProduit: " . $e->getMessage());
+                }
+            }
+
+            return new JsonResponse([
+                'description' => $description,
+                'imageUrl' => $imageUrl
+            ]);
         } catch (\Exception $e) {
             return new JsonResponse([
                 'erreur' => 'Échec de la récupération de la description',
@@ -338,7 +365,7 @@ class ProductsController extends AbstractController
 
         $comments = $produit->getCommentaires()->map(function (Commentaire $comment) {
             return [
-                'auteur' => $this->getUser()->getNom(),
+                'auteur' => $comment->getAuteur(),
                 'contenu' => $comment->getContenu(),
                 'note' => $comment->getNote(),
                 'dateCreation' => $comment->getDateCreation()->format('Y-m-d H:i:s')
@@ -366,7 +393,7 @@ class ProductsController extends AbstractController
         $commentaire = new Commentaire();
         $commentaire->setContenu($data['content'])
             ->setNote((float)$data['note'])
-            ->setAuteur($this->getUser()->getNom())
+            ->setAuteur($user->getNom())
             ->setProduit($produit)
             ->setUser($user);
         $entityManager->persist($commentaire);
@@ -417,7 +444,8 @@ class ProductsController extends AbstractController
             'nom' => $produit->getNom(),
             'description' => $produit->getDescription(),
             'prixUnitaire' => $produit->getPrixUnitaire(),
-            'categorie' => $produit->getCategorie()->getNom(),
+            'imageName' => $produit->getImageName(),
+            'categorie' => $produit->getCategorie() ? $produit->getCategorie()->getNom() : null,
             'quantite' => $produit->getQuantite(),
         ], $products);
 
@@ -465,7 +493,36 @@ class ProductsController extends AbstractController
 
             $cleanDescription = $this->extractDescription($content);
 
-            return new JsonResponse(["description" => $cleanDescription]);
+            $imageUrl = null;
+            try {
+                $localImagePath = $this->getLocalImagePath($query);
+                if ($localImagePath && file_exists($localImagePath)) {
+                    $imageUrl = $this->uploadImageToMagicApi(new File($localImagePath));
+                } else {
+                    $openFoodFactsUrl = "https://world.openfoodfacts.org/cgi/search.pl?search_terms=" . urlencode($query) . "&search_simple=1&json=1";
+                    $response = $this->httpClient->request('GET', $openFoodFactsUrl, [
+                        'headers' => [
+                            'Content-Type' => 'application/json',
+                            'User-Agent' => 'Symfony-App - Test',
+                        ],
+                    ]);
+                    $data = $response->toArray();
+                    if (!empty($data['products'])) {
+                        $product = $data['products'][0];
+                        $imageUrl = $product['image_front_url'] ?? $product['image_url'] ?? null;
+                        if ($imageUrl) {
+                            $imageUrl = $this->uploadImageUrlToMagicApi($imageUrl);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                error_log("Failed to process image for $query: " . $e->getMessage());
+            }
+
+            return new JsonResponse([
+                'description' => $cleanDescription,
+                'imageUrl' => $imageUrl
+            ]);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => 'Erreur lors de la requête API', 'message' => $e->getMessage()], 500);
         }
@@ -478,12 +535,169 @@ class ProductsController extends AbstractController
             isset($apiResponse['data']['outputs'][0]['text'])
         ) {
             $description = $apiResponse['data']['outputs'][0]['text'];
-
             $cleanDescription = trim(preg_replace('/\s+/', ' ', $description));
-
             return $cleanDescription;
         }
-
         return "Aucune description valide trouvée.";
+    }
+
+  private function handleImageUpload($form, Produit $product): void
+   {
+       $imageFile = $form->get('imageFile')->getData();
+       $productName = $product->getNom();
+
+       error_log('handleImageUpload called: ' . json_encode([
+           'hasImageFile' => !empty($imageFile),
+           'productName' => $productName,
+           'isNewProduct' => $product->getId() === null
+       ]));
+
+       try {
+           if ($imageFile) {
+               error_log('Uploading user-provided image');
+               $cloudUrl = $this->uploadImageToMagicApi($imageFile);
+               $product->setImageName($cloudUrl);
+           } elseif ($product->getId() === null) {
+               $localImagePath = $this->getLocalImagePath($productName);
+               if ($localImagePath && file_exists($localImagePath)) {
+                   error_log('Uploading local image: ' . $localImagePath);
+                   $cloudUrl = $this->uploadImageToMagicApi(new File($localImagePath));
+                   $product->setImageName($cloudUrl);
+               } else {
+                   error_log('No local image found for: ' . $productName);
+               }
+           }
+       } catch (\Exception $e) {
+           error_log('Image upload error: ' . $e->getMessage());
+           $this->addFlash('error', 'Failed to process image: ' . $e->getMessage());
+       }
+   }    private function getLocalImagePath(string $productName): ?string
+    {
+        $basePath = $this->getParameter('kernel.project_dir') . '/public/Uploads/images/';
+        $slug = $this->slugger->slug(strtolower($productName))->toString();
+        $extensions = ['jpg', 'jpeg', 'png', 'bmp', 'gif', 'webp'];
+
+        foreach ($extensions as $ext) {
+            $filePath = $basePath . $slug . '.' . $ext;
+            if (file_exists($filePath)) {
+                return $filePath;
+            }
+        }
+
+        return null;
+    }
+private function uploadImageToMagicApi($imageFile): string
+{
+    $extension = $imageFile->guessExtension();
+    if (!in_array($extension, ['jpg', 'jpeg', 'png', 'bmp', 'gif', 'webp'])) {
+        throw new \InvalidArgumentException('Invalid image format. Allowed: jpg, jpeg, png, bmp, gif, webp.');
+    }
+
+    try {
+        $response = $this->httpClient->request('POST', 'https://prod.api.market/api/v1/magicapi/image-upload/upload', [
+            'headers' => [
+                'accept' => 'application/json',
+                'x-magicapi-key' =>  "cmaocal040001jm046r2mztky",
+                'Content-Type' => 'multipart/form-data',
+            ],
+            'body' => [
+                'filename' => $imageFile,
+            ],
+        ]);
+
+        $statusCode = $response->getStatusCode();
+        $content = $response->toArray(false);
+
+        // Log the response
+        error_log('MagicAPI Response: ' . json_encode([
+            'status' => $statusCode,
+            'content' => $content
+        ]));
+
+        if ($statusCode !== 200 || !isset($content['url'])) {
+            throw new \Exception('MagicAPI upload failed. Status: ' . $statusCode . ', Response: ' . json_encode($content));
+        }
+
+        return $content['url'];
+    } catch (\Exception $e) {
+        error_log('MagicAPI Error: ' . $e->getMessage());
+        throw new \Exception('Failed to upload image to MagicAPI: ' . $e->getMessage());
+    }
+}    private function uploadImageUrlToMagicApi(string $imageUrl): string
+    {
+        if (empty($imageUrl)) {
+            throw new \InvalidArgumentException('Image URL cannot be empty.');
+        }
+
+        if (!filter_var($imageUrl, FILTER_VALIDATE_URL)) {
+            throw new \InvalidArgumentException('Invalid image URL.');
+        }
+
+        try {
+            $tempFile = tempnam(sys_get_temp_dir(), 'magicapi_');
+            $response = $this->httpClient->request('GET', $imageUrl, [
+                'headers' => [
+                    'User-Agent' => 'Symfony-App - Test',
+                ],
+            ]);
+
+            if ($response->getStatusCode() !== 200) {
+                throw new \Exception('Failed to download image from URL. Status: ' . $response->getStatusCode());
+            }
+
+            file_put_contents($tempFile, $response->getContent());
+
+            $extension = strtolower(pathinfo(parse_url($imageUrl, PHP_URL_PATH), PATHINFO_EXTENSION));
+            if (empty($extension)) {
+                $contentType = $response->getHeaders()['content-type'][0] ?? '';
+                $extension = match (true) {
+                    str_contains($contentType, 'jpeg') => 'jpg',
+                    str_contains($contentType, 'png') => 'png',
+                    str_contains($contentType, 'gif') => 'gif',
+                    str_contains($contentType, 'bmp') => 'bmp',
+                    str_contains($contentType, 'webp') => 'webp',
+                    default => 'jpg',
+                };
+            }
+
+            if (!in_array($extension, ['jpg', 'jpeg', 'png', 'bmp', 'gif', 'webp'])) {
+                unlink($tempFile);
+                throw new \InvalidArgumentException('Invalid image format. Allowed: jpg, jpeg, png, bmp, gif, webp.');
+            }
+
+            $tempFileWithExtension = $tempFile . '.' . $extension;
+            rename($tempFile, $tempFileWithExtension);
+
+            try {
+                $response = $this->httpClient->request('POST', 'https://prod.api.market/api/v1/magicapi/image-upload/upload', [
+                    'headers' => [
+                        'accept' => 'application/json',
+                        'x-magicapi-key' => $this->getParameter('magicapi_key'),
+                        'Content-Type' => 'multipart/form-data',
+                    ],
+                    'body' => [
+                        'filename' => new File($tempFileWithExtension),
+                    ],
+                ]);
+
+                $statusCode = $response->getStatusCode();
+                $content = $response->toArray(false);
+
+                if ($statusCode !== 200 || !isset($content['url'])) {
+                    throw new \Exception('MagicAPI upload failed. Status: ' . $statusCode . ', Response: ' . json_encode($content));
+                }
+
+                return $content['url'];
+            } finally {
+                if (file_exists($tempFileWithExtension)) {
+                    unlink($tempFileWithExtension);
+                }
+            }
+        } catch (\Exception $e) {
+            if (isset($tempFile) && file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+            throw new \Exception('Failed to upload image URL to MagicAPI: ' . $e->getMessage());
+        }
     }
 }
