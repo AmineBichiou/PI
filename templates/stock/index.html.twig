@@ -311,15 +311,7 @@
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="filterDropdown" style="min-width: 300px; position: absolute; z-index: 1000;">
                                         <!-- Filtre par catégorie -->
-                                        <div class="mb-3">
-                                            <label for="filter-categorie" class="form-label"><i class="fas fa-tags me-2"></i> Catégorie</label>
-                                            <select id="filter-categorie" class="form-control">
-                                                <option value="">Toutes les catégories</option>
-                                                {% for categorie in categories %}
-                                                    <option value="{{ categorie.id }}">{{ categorie.nom }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
+                                      
 
                                         <!-- Filtre par entrepôt -->
                                         <div class="mb-3">
@@ -367,9 +359,9 @@
                             </thead>
                             <tbody>
                                 {% for stock in stocks %}
-                                    <tr data-categorie="{{ stock.produit.categorie.id }}" 
+                                  
                                         data-entrepot="{{ stock.entrepots|map(e => e.id)|join(',') }}" 
-                                        data-fournisseur="{{ stock.fournisseurs|map(f => f.id)|join(',') }}">
+                                      
                                         <td>{{ stock.id }}</td>
                                         <td>{{ stock.produit }}</td>
                                         <td>
@@ -388,7 +380,7 @@
                                                 <span class="badge bg-primary">{{ entrepot.nom }}</span>
                                             {% endfor %}
                                         </td>
-                                        <td>{{ stock.produit.categorie.nom }}</td>
+                                        
                                         <td>
                                             <div class="d-flex gap-2">
                                                 <a href="{{ path('app_stock_edit', { id: stock.id }) }}" class="btn btn-sm btn-warning">
@@ -423,7 +415,7 @@
   document.addEventListener("DOMContentLoaded", function () {
     // Sélection des éléments
     const searchInput = document.getElementById("stock-search");
-    const categoryFilter = document.getElementById("filter-categorie");
+  
     const warehouseFilter = document.getElementById("filter-entrepot");
     const resetFilterButton = document.getElementById("reset-filters");
     const stockTable = document.getElementById("stock-table");
@@ -431,12 +423,12 @@
 
     function filterTable() {
         const searchValue = (searchInput.value || "").trim().toLowerCase();
-        const categoryValue = (categoryFilter.value || "").trim().toLowerCase();
+    
         const warehouseValue = (warehouseFilter.value || "").trim().toLowerCase();
 
         Array.from(tableRows).forEach(row => {
             // Récupération des attributs data
-            const rowCategory = (row.getAttribute("data-categorie") || "").trim().toLowerCase();
+            
             const rowWarehouses = (row.getAttribute("data-entrepot") || "").split(',').map(id => id.trim().toLowerCase());
             const cells = row.getElementsByTagName("td");
 
@@ -448,24 +440,21 @@
             });
 
             // Filtre par catégorie
-            const matchesCategory = categoryValue === "" || rowCategory === categoryValue;
+          
 
             // Filtre par entrepôt (vérifie si l'entrepôt sélectionné est dans la liste)
             const matchesWarehouse = warehouseValue === "" || rowWarehouses.includes(warehouseValue);
 
-            // Affichage de la ligne si tous les filtres correspondent
-            row.style.display = (matchesSearch && matchesCategory && matchesWarehouse) ? "" : "none";
+          
         });
     }
 
     // Ajout des écouteurs d'événements
     searchInput.addEventListener("input", filterTable);
-    categoryFilter.addEventListener("change", filterTable);
     warehouseFilter.addEventListener("change", filterTable);
     
     resetFilterButton.addEventListener("click", function () {
         searchInput.value = "";
-        categoryFilter.value = "";
         warehouseFilter.value = "";
         filterTable();
     });

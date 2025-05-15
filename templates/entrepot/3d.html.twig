@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>Entrepôt 3D Premium - Fruits & Légumes</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #2ecc71;
+            --secondary-color: #27ae60;
+            --accent-color: #1abc9c;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --success-color: #3498db;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+            --background-light: #f7f9fc;
+            --background-dark: #34495e;
+            --text-light: #2c3e50;
+            --text-dark: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+
+        body.light {
+            background-color: var(--background-light);
+            color: var(--text-light);
+        }
+
+        body.dark {
+            background-color: var(--background-dark);
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .dark .card {
+            background: #3b4b66;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            text-align: center;
+            color: var(--primary-color);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: inherit;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid #dfe6e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
+        }
+
+        .dark .form-control {
+            background: #4b6584;
+            border-color: #778ca3;
+            color: var(--text-dark);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.2);
+            transform: scale(1.02);
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -12px;
+        }
+
+        .col {
+            flex: 1;
+            padding: 0 12px;
+            min-width: 250px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+            animation: popIn 0.4s ease-out;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--success-color), #2980b9);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color), #c0392b);
+            color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .canvas-container {
+            width: 100%;
+            height: 650px;
+            background-color: #dfe6e9;
+            border-radius: 16px;
+            margin: 25px 0;
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 0.7s ease-out;
+        }
+
+        .dark .canvas-container {
+            background-color: #4b6584;
+        }
+
+        #warehouse-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            transition: opacity 0.3s;
+        }
+
+        .dark .loading-overlay {
+            background: rgba(0, 0, 0, 0.85);
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--danger-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 25px;
+            margin: 25px 0;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-item input {
+            margin-right: 10px;
+            accent-color: var(--primary-color);
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 30px 0 20px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            color: var(--primary-color);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .dark .section-title {
+            border-bottom-color: var(--accent-color);
+        }
+
+        .stats-panel {
+            background: #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 25px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .dark .stats-panel {
+            background: #4b6584;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #dfe6e9;
+        }
+
+        .dark .stat-item {
+            border-bottom-color: #778ca3;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .controls-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .slider-container {
+            width: 100%;
+            margin: 25px 0;
+        }
+
+        .slider-container input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary-color);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            color: white;
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1000;
+            transition: transform 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(180deg);
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: var(--dark-color);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .col {
+                flex: 100%;
+                margin-bottom: 20px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .canvas-container {
+                height: 450px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body class="light">
+    <button id="theme-toggle" class="theme-toggle tooltip">
+        <span class="tooltiptext">Changer de thème</span>
+        🌙
+    </button>
+    <div id="error-message" class="error-message"></div>
+    <div class="container">
+        <div class="card">
+            <h1 class="title">Entrepôt 3D Premium - Fruits & Légumes</h1>
+
+            <div class="form-group">
+                <label class="form-label">Dimensions (L x l x H)</label>
+                <div class="row">
+                    <div class="col">
+                        <input type="number" id="length" class="form-control" placeholder="Longueur (m)" min="1" step="0.1" value="20">
+                    </div>
+                    <div class="col">
+                        <input type="number" id="width" class="form-control" placeholder="Largeur (m)" min="1" step="0.1" value="15">
+                    </div>
+                    <div class="col">
+                        <input type="number" id="height" class="form-control" placeholder="Hauteur (m)" min="1" step="0.1" value="10">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label class="form-label">Nombre d'allées</label>
+                        <input type="number" id="aisles" class="form-control" placeholder="Nombre" min="1" value="2">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label class="form-label">Type de stockage</label>
+                        <select id="storage-type" class="form-control">
+                            <option value="fruits">Fruits</option>
+                            <option value="legumes">Légumes</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkbox-group">
+                <div class="checkbox-item tooltip">
+                    <input type="checkbox" id="lighting">
+                    <label for="lighting">Éclairage Dynamique</label>
+                    <span class="tooltiptext">Active un éclairage réaliste</span>
+                </div>
+                <div class="checkbox-item tooltip">
+                    <input type="checkbox" id="transparency">
+                    <label for="transparency">Murs Transparents</label>
+                    <span class="tooltiptext">Rend les murs semi-transparents</span>
+                </div>
+                <div class="checkbox-item tooltip">
+                    <input type="checkbox" id="animation">
+                    <label for="animation">Animations Objets</label>
+                    <span class="tooltiptext">Active les animations des chariots</span>
+                </div>
+                <div class="checkbox-item tooltip">
+                    <input type="checkbox" id="temperature">
+                    <label for="temperature">Simulation Température</label>
+                    <span class="tooltiptext">Simule la température pour stockage</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description détaillée</label>
+                <textarea id="description" class="form-control" rows="4" placeholder="Décrivez votre entrepôt (ex. matériaux, disposition...)"></textarea>
+            </div>
+
+            <div class="btn-group">
+                <button id="generate-btn" class="btn btn-primary tooltip">
+                    <i class="fas fa-cube"></i> Générer Vue 3D
+                    <span class="tooltiptext">Crée la visualisation 3D</span>
+                </button>
+                <button id="export-png" class="btn btn-secondary tooltip">
+                    <i class="fas fa-download"></i> Exporter PNG
+                    <span class="tooltiptext">Télécharge l'image 3D</span>
+                </button>
+                <button id="reset-btn" class="btn btn-danger tooltip">
+                    <i class="fas fa-redo"></i> Réinitialiser
+                    <span class="tooltiptext">Réinitialise tous les paramètres</span>
+                </button>
+                <button id="undo" class="btn btn-danger tooltip">
+                    <i class="fas fa-undo"></i> Annuler
+                    <span class="tooltiptext">Annule la dernière action</span>
+                </button>
+                <button id="redo" class="btn btn-danger tooltip">
+                    <i class="fas fa-redo"></i> Refaire
+                    <span class="tooltiptext">Restaure l'action annulée</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="canvas-container">
+                <canvas id="warehouse-canvas"></canvas>
+                <div class="loading-overlay" id="loading-overlay">
+                    <div class="spinner"></div>
+                    <p>Chargement...</p>
+                </div>
+            </div>
+
+            <div class="stats-panel">
+                <div class="stat-item">
+                    <span class="stat-label">Volume total:</span>
+                    <span class="stat-value" id="volume">0 m³</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Espace utilisé:</span>
+                    <span class="stat-value" id="space-used">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Mesures:</span>
+                    <span class="stat-value" id="measurements">Aucune</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Température:</span>
+                    <span class="stat-value" id="temperature-display">Non activée</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Contrôles Premium</h2>
+
+            <div class="slider-container">
+                <label class="form-label">Rotation horizontale</label>
+                <input type="range" id="camera-slider" min="0" max="360" value="180" class="form-control">
+            </div>
+
+            <div class="controls-group">
+                <button id="rotate-left" class="btn btn-secondary tooltip">
+                    <i class="fas fa-arrow-left"></i> Tourner Gauche
+                    <span class="tooltiptext">Tourne la caméra à gauche</span>
+                </button>
+                <button id="rotate-right" class="btn btn-secondary tooltip">
+                    <i class="fas fa-arrow-right"></i> Tourner Droite
+                    <span class="tooltiptext">Tourne la caméra à droite</span>
+                </button>
+                <button id="zoom-in" class="btn btn-secondary tooltip">
+                    <i class="fas fa-search-plus"></i> Zoom +
+                    <span class="tooltiptext">Rapproche la caméra</span>
+                </button>
+                <button id="zoom-out" class="btn btn-secondary tooltip">
+                    <i class="fas fa-search-minus"></i> Zoom -
+                    <span class="tooltiptext">Éloigne la caméra</span>
+                </button>
+            </div>
+
+            <div class="controls-group">
+                <button id="grid-toggle" class="btn btn-primary tooltip">
+                    <i class="fas fa-th"></i> Afficher Grille
+                    <span class="tooltiptext">Affiche une grille au sol</span>
+                </button>
+                <button id="measure-toggle" class="btn btn-primary tooltip">
+                    <i class="fas fa-ruler"></i> Mode Mesure
+                    <span class="tooltiptext">Mesure des distances</span>
+                </button>
+                <button id="section-toggle" class="btn btn-primary tooltip">
+                    <i class="fas fa-cut"></i> Vue en Coupe
+                    <span class="tooltiptext">Affiche une coupe transversale</span>
+                </button>
+                <button id="inspection-toggle" class="btn btn-primary tooltip">
+                    <i class="fas fa-search"></i> Mode Inspection
+                    <span class="tooltiptext">Inspecte les détails des caisses</span>
+                </button>
+            </div>
+
+            <div class="row" style="margin-top: 20px;">
+                <div class="col">
+                    <label class="form-label">Couleur des murs</label>
+                    <input type="color" id="wall-color" class="form-control" value="#d3d3d3">
+                </div>
+                <div class="col">
+                    <label class="form-label">Couleur du sol</label>
+                    <input type="color" id="floor-color" class="form-control" value="#696969">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <label class="form-label">Ajouter une annotation</label>
+                <div class="row">
+                    <div class="col" style="flex: 3;">
+                        <input type="text" id="annotation-text" class="form-control" placeholder="Texte de l'annotation">
+                    </div>
+                    <div class="col" style="flex: 1;">
+                        <button id="add-annotation" class="btn btn-primary tooltip">
+                            <i class="fas fa-plus"></i> Ajouter
+                            <span class="tooltiptext">Ajoute une annotation déplaçable</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.134/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.min.js"></script>
+
+    <script>
+        // Gestion des erreurs de chargement
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
+        }
+
+        // Vérification du chargement de TWEEN
+        window.addEventListener('load', () => {
+            if (typeof TWEEN === 'undefined') {
+                showError('Erreur : TWEEN.js non chargé. Les animations seront désactivées.');
+                window.TWEEN = { update: () => {} }; // Fallback pour éviter les erreurs
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('warehouse-canvas');
+            if (!canvas) {
+                showError('Erreur : Canvas non trouvé.');
+                return;
+            }
+
+            // Vérification WebGL
+            if (!window.WebGLRenderingContext || !canvas.getContext('webgl')) {
+                showError('Erreur : WebGL non supporté par votre navigateur.');
+                return;
+            }
+
+            // Initialisation Three.js
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xdfe6e9);
+            const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            const controls = new THREE.OrbitControls(camera, canvas);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.target.set(0, 5, 0);
+            controls.maxPolarAngle = Math.PI / 2;
+
+            // Éclairage
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 1024;
+            directionalLight.shadow.mapSize.height = 1024;
+            scene.add(directionalLight);
+
+            // Gestion d'état
+            let state = {
+                dimensions: { length: 20, width: 15, height: 10 },
+                aisles: 2,
+                storageType: 'fruits',
+                wallColor: '#d3d3d3',
+                floorColor: '#696969',
+                lighting: false,
+                transparency: false,
+                animation: false,
+                temperature: false,
+                gridVisible: false,
+                measureMode: false,
+                sectionView: false,
+                inspectionMode: false,
+                annotations: [],
+            };
+            let history = [];
+            let historyIndex = -1;
+            let measurePoints = [];
+            let measurements = [];
+            let forklifts = [];
+            let selectedAnnotation = null;
+
+            function saveState() {
+                history = history.slice(0, historyIndex + 1);
+                history.push(JSON.parse(JSON.stringify(state)));
+                historyIndex++;
+            }
+
+            function undo() {
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    state = JSON.parse(JSON.stringify(history[historyIndex]));
+                    updateScene();
+                }
+            }
+
+            function redo() {
+                if (historyIndex < history.length - 1) {
+                    historyIndex++;
+                    state = JSON.parse(JSON.stringify(history[historyIndex]));
+                    updateScene();
+                }
+            }
+
+            function updateScene() {
+                console.log('Updating scene...');
+                while (scene.children.length > 0) {
+                    scene.remove(scene.children[0]);
+                }
+                scene.add(ambientLight);
+                scene.add(directionalLight);
+
+                const wallMaterial = new THREE.MeshPhongMaterial({
+                    color: state.wallColor,
+                    transparent: state.transparency,
+                    opacity: state.transparency ? 0.4 : 1,
+                    wireframe: false,
+                });
+                const floorMaterial = new THREE.MeshPhongMaterial({
+                    color: state.floorColor,
+                    wireframe: false,
+                });
+
+                // Sol
+                const floor = new THREE.Mesh(
+                    new THREE.PlaneGeometry(state.dimensions.length, state.dimensions.width),
+                    floorMaterial
+                );
+                floor.rotation.x = -Math.PI / 2;
+                floor.position.y = state.dimensions.height / 2;
+                floor.receiveShadow = true;
+                scene.add(floor);
+
+                // Murs
+                const walls = [];
+                const wallThickness = 0.2;
+                walls.push(new THREE.Mesh(
+                    new THREE.BoxGeometry(wallThickness, state.dimensions.height, state.dimensions.width),
+                    wallMaterial
+                ));
+                walls[0].position.x = -state.dimensions.length / 2;
+                walls.push(new THREE.Mesh(
+                    new THREE.BoxGeometry(wallThickness, state.dimensions.height, state.dimensions.width),
+                    wallMaterial
+                ));
+                walls[1].position.x = state.dimensions.length / 2;
+                walls.push(new THREE.Mesh(
+                    new THREE.BoxGeometry(state.dimensions.length, state.dimensions.height, wallThickness),
+                    wallMaterial
+                ));
+                walls[2].position.z = -state.dimensions.width / 2;
+                walls.push(new THREE.Mesh(
+                    new THREE.BoxGeometry(state.dimensions.length, state.dimensions.height, wallThickness),
+                    wallMaterial
+                ));
+                walls[3].position.z = state.dimensions.width / 2;
+
+                walls.forEach(wall => {
+                    wall.castShadow = true;
+                    wall.receiveShadow = true;
+                    scene.add(wall);
+                });
+
+                // Toit
+                const roof = new THREE.Mesh(
+                    new THREE.BoxGeometry(state.dimensions.length, 0.2, state.dimensions.width),
+                    wallMaterial
+                );
+                roof.position.y = -state.dimensions.height / 2;
+                scene.add(roof);
+
+                // Racks pour Fruits ou Légumes
+                const aisleWidth = state.dimensions.width / (state.aisles + 1);
+                for (let i = 0; i < state.aisles; i++) {
+                    const xPos = -state.dimensions.length / 2 + (i + 1) * (state.dimensions.length / (state.aisles + 1));
+                    const shelfGroup = new THREE.Group();
+                    const crateCount = Math.floor(state.dimensions.length / 2);
+                    for (let j = 0; j < crateCount; j++) {
+                        const crate = new THREE.Mesh(
+                            new THREE.BoxGeometry(1.5, 0.8, 1.5),
+                            new THREE.MeshPhongMaterial({
+                                color: state.storageType === 'fruits' ? '#e74c3c' : '#2ecc71',
+                                wireframe: false
+                            })
+                        );
+                        crate.position.x = -state.dimensions.length * 0.4 + j * (state.dimensions.length * 0.8 / crateCount);
+                        crate.position.y = state.dimensions.height / 2 - 0.4;
+                        crate.position.z = (i % 2 === 0 ? 1 : -1) * (state.dimensions.width / 4);
+                        crate.userData = { type: state.storageType, index: j };
+                        if (typeof TWEEN !== 'undefined') {
+                            crate.scale.set(0, 0, 0);
+                            new TWEEN.Tween(crate.scale)
+                                .to({ x: 1, y: 1, z: 1 }, 500)
+                                .easing(TWEEN.Easing.Elastic.Out)
+                                .delay(j * 50)
+                                .start();
+                        }
+                        shelfGroup.add(crate);
+                    }
+                    shelfGroup.position.x = xPos;
+                    scene.add(shelfGroup);
+                }
+
+                // Chariots élévateurs
+                forklifts = [];
+                for (let i = 0; i < 2; i++) {
+                    const forklift = new THREE.Group();
+                    const body = new THREE.Mesh(
+                        new THREE.BoxGeometry(1.5, 0.8, 0.8),
+                        new THREE.MeshPhongMaterial({ color: '#f1c40f', wireframe: false })
+                    );
+                    const fork = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.2, 0.1, 1.2),
+                        new THREE.MeshPhongMaterial({ color: '#bdc3c7' })
+                    );
+                    fork.position.set(0.85, -0.3, 0);
+                    forklift.add(body, fork);
+                    forklift.position.set(
+                        -state.dimensions.length / 3 + i * (state.dimensions.length / 3),
+                        state.dimensions.height / 2 - 0.4,
+                        state.dimensions.width / 3 * (i % 2 === 0 ? 1 : -1)
+                    );
+                    forklifts.push(forklift);
+                    scene.add(forklift);
+                }
+
+                // Grille
+                if (state.gridVisible) {
+                    const gridSize = Math.max(state.dimensions.length, state.dimensions.width);
+                    const grid = new THREE.GridHelper(gridSize, gridSize, 0x888888, 0x888888);
+                    grid.position.y = state.dimensions.height / 2 - 0.01;
+                    scene.add(grid);
+                }
+
+                // Vue en coupe
+                if (state.sectionView) {
+                    const section = new THREE.Mesh(
+                        new THREE.PlaneGeometry(state.dimensions.length * 2, state.dimensions.width * 2),
+                        new THREE.MeshBasicMaterial({ color: '#3498db', transparent: true, opacity: 0.3, side: THREE.DoubleSide })
+                    );
+                    section.position.y = state.dimensions.height / 4;
+                    section.rotation.x = Math.PI / 2;
+                    scene.add(section);
+                }
+
+                // Éclairage dynamique
+                if (state.lighting && typeof TWEEN !== 'undefined') {
+                    const pointLight = new THREE.PointLight(0xffffff, 1);
+                    pointLight.position.set(0, -state.dimensions.height / 2 + 0.1, 0);
+                    scene.add(pointLight);
+                    new TWEEN.Tween(pointLight)
+                        .to({ intensity: 0.5 }, 1000)
+                        .yoyo(true)
+                        .repeat(Infinity)
+                        .easing(TWEEN.Easing.Sinusoidal.InOut)
+                        .start();
+                } else if (state.lighting) {
+                    const pointLight = new THREE.PointLight(0xffffff, 1);
+                    pointLight.position.set(0, -state.dimensions.height / 2 + 0.1, 0);
+                    scene.add(pointLight);
+                }
+
+                // Simulation de température
+                if (state.temperature) {
+                    const temp = state.storageType === 'fruits' ? '2-8°C' : '0-4°C';
+                    document.getElementById('temperature-display').textContent = temp;
+                    const tempOverlay = new THREE.Mesh(
+                        new THREE.BoxGeometry(state.dimensions.length, state.dimensions.height, state.dimensions.width),
+                        new THREE.MeshBasicMaterial({
+                            color: state.storageType === 'fruits' ? '#ffcccc' : '#ccffcc',
+                            transparent: true,
+                            opacity: 0.1
+                        })
+                    );
+                    tempOverlay.position.y = state.dimensions.height / 2 - state.dimensions.height / 2;
+                    scene.add(tempOverlay);
+                    if (typeof TWEEN !== 'undefined') {
+                        new TWEEN.Tween(tempOverlay.material)
+                            .to({ opacity: 0.05 }, 1500)
+                            .yoyo(true)
+                            .repeat(Infinity)
+                            .easing(TWEEN.Easing.Sinusoidal.InOut)
+                            .start();
+                    }
+                } else {
+                    document.getElementById('temperature-display').textContent = 'Non activée';
+                }
+
+                // Annotations
+                state.annotations.forEach((annotation, index) => {
+                    const spriteMaterial = new THREE.SpriteMaterial({
+                        map: (() => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = 256;
+                            canvas.height = 64;
+                            const ctx = canvas.getContext('2d');
+                            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                            ctx.fillRect(0, 0, 256, 64);
+                            ctx.fillStyle = 'white';
+                            ctx.font = '20px Arial';
+                            ctx.fillText(annotation.text, 10, 40);
+                            return new THREE.CanvasTexture(canvas);
+                        })(),
+                    });
+                    const sprite = new THREE.Sprite(spriteMaterial);
+                    sprite.position.set(annotation.x, annotation.y, annotation.z);
+                    sprite.scale.set(2, 0.5, 1);
+                    sprite.userData = { index };
+                    if (typeof TWEEN !== 'undefined') {
+                        sprite.scale.set(0, 0, 0);
+                        new TWEEN.Tween(sprite.scale)
+                            .to({ x: 2, y: 0.5, z: 1 }, 500)
+                            .easing(TWEEN.Easing.Elastic.Out)
+                            .delay(index * 50)
+                            .start();
+                    }
+                    scene.add(sprite);
+                });
+
+                // Mise à jour des statistiques
+                const volume = state.dimensions.length * state.dimensions.width * state.dimensions.height;
+                const usedSpace = ((state.aisles * 1.5 * 0.8 * 1.5) / volume * 100).toFixed(2);
+                document.getElementById('volume').textContent = `${volume.toFixed(2)} m³`;
+                document.getElementById('space-used').textContent = `${usedSpace}%`;
+                document.getElementById('measurements').textContent = measurements.map(m => `${m.toFixed(2)} m`).join(', ') || 'Aucune';
+
+                renderer.render(scene, camera);
+                console.log('Scene updated and rendered.');
+            }
+
+            // Animation
+            function animate() {
+                requestAnimationFrame(animate);
+                if (typeof TWEEN !== 'undefined') {
+                    TWEEN.update();
+                }
+                if (state.animation) {
+                    forklifts.forEach((forklift, index) => {
+                        forklift.position.x = -state.dimensions.length / 3 + index * (state.dimensions.length / 3) + Math.sin(Date.now() * 0.001 + index) * (state.dimensions.length / 6);
+                        forklift.rotation.y = Math.sin(Date.now() * 0.001 + index) * 0.2;
+                        if (typeof TWEEN !== 'undefined') {
+                            forklift.children[1].position.y = -0.3 + Math.sin(Date.now() * 0.002 + index) * 0.1;
+                        }
+                    });
+                }
+                if (state.inspectionMode && typeof TWEEN !== 'undefined') {
+                    scene.traverse(obj => {
+                        if (obj.userData.type) {
+                            new TWEEN.Tween(obj.scale)
+                                .to({ x: 1.1, y: 1.1, z: 1.1 }, 500)
+                                .yoyo(true)
+                                .repeat(Infinity)
+                                .easing(TWEEN.Easing.Sinusoidal.InOut)
+                                .start();
+                        }
+                    });
+                }
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // Validation des entrées
+            function validateInputs() {
+                const length = parseFloat(document.getElementById('length').value);
+                const width = parseFloat(document.getElementById('width').value);
+                const height = parseFloat(document.getElementById('height').value);
+                const aisles = parseInt(document.getElementById('aisles').value);
+                const storageType = document.getElementById('storage-type').value;
+
+                if (isNaN(length) || length < 1) {
+                    showError('Longueur invalide. Minimum 1m.');
+                    return false;
+                }
+                if (isNaN(width) || width < 1) {
+                    showError('Largeur invalide. Minimum 1m.');
+                    return false;
+                }
+                if (isNaN(height) || height < 1) {
+                    showError('Hauteur invalide. Minimum 1m.');
+                    return false;
+                }
+                if (isNaN(aisles) || aisles < 1) {
+                    showError('Nombre d\'allées invalide. Minimum 1.');
+                    return false;
+                }
+                if (!storageType) {
+                    showError('Veuillez sélectionner un type de stockage.');
+                    return false;
+                }
+                return true;
+            }
+
+            // Événements
+            document.getElementById('generate-btn').addEventListener('click', () => {
+                if (!validateInputs()) return;
+                state.dimensions.length = parseFloat(document.getElementById('length').value) || 20;
+                state.dimensions.width = parseFloat(document.getElementById('width').value) || 15;
+                state.dimensions.height = parseFloat(document.getElementById('height').value) || 10;
+                state.aisles = parseInt(document.getElementById('aisles').value) || 2;
+                state.storageType = document.getElementById('storage-type').value || 'fruits';
+                state.wallColor = document.getElementById('wall-color').value;
+                state.floorColor = document.getElementById('floor-color').value;
+                const loadingOverlay = document.getElementById('loading-overlay');
+                loadingOverlay.style.display = 'flex';
+                setTimeout(() => {
+                    try {
+                        saveState();
+                        updateScene();
+                        loadingOverlay.style.display = 'none';
+                    } catch (e) {
+                        showError('Erreur lors de la génération : ' + e.message);
+                        loadingOverlay.style.display = 'none';
+                    }
+                }, 100);
+            });
+
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                state = {
+                    dimensions: { length: 20, width: 15, height: 10 },
+                    aisles: 2,
+                    storageType: 'fruits',
+                    wallColor: '#d3d3d3',
+                    floorColor: '#696969',
+                    lighting: false,
+                    transparency: false,
+                    animation: false,
+                    temperature: false,
+                    gridVisible: false,
+                    measureMode: false,
+                    sectionView: false,
+                    inspectionMode: false,
+                    annotations: [],
+                };
+                measurements = [];
+                saveState();
+                updateScene();
+                document.getElementById('length').value = '20';
+                document.getElementById('width').value = '15';
+                document.getElementById('height').value = '10';
+                document.getElementById('aisles').value = '2';
+                document.getElementById('storage-type').value = 'fruits';
+                document.getElementById('description').value = '';
+                document.getElementById('wall-color').value = '#d3d3d3';
+                document.getElementById('floor-color').value = '#696969';
+                document.getElementById('lighting').checked = false;
+                document.getElementById('transparency').checked = false;
+                document.getElementById('animation').checked = false;
+                document.getElementById('temperature').checked = false;
+            });
+
+            document.getElementById('export-png').addEventListener('click', () => {
+                try {
+                    renderer.render(scene, camera);
+                    const dataURL = renderer.domElement.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.href = dataURL;
+                    link.download = 'entrepot_3d.png';
+                    link.click();
+                } catch (e) {
+                    showError('Erreur lors de l\'exportation : ' + e.message);
+                }
+            });
+
+            document.getElementById('lighting').addEventListener('change', (e) => {
+                state.lighting = e.target.checked;
+                saveState();
+                updateScene();
+            });
+
+            document.getElementById('transparency').addEventListener('change', (e) => {
+                state.transparency = e.target.checked;
+                saveState();
+                updateScene();
+            });
+
+            document.getElementById('animation').addEventListener('change', (e) => {
+                state.animation = e.target.checked;
+                saveState();
+                updateScene();
+            });
+
+            document.getElementById('temperature').addEventListener('change', (e) => {
+                state.temperature = e.target.checked;
+                saveState();
+                updateScene();
+            });
+
+            document.getElementById('grid-toggle').addEventListener('click', () => {
+                state.gridVisible = !state.gridVisible;
+                saveState();
+                updateScene();
+            });
+
+            document.getElementById('measure-toggle').addEventListener('click', () => {
+                state.measureMode = !state.measureMode;
+                state.inspectionMode = false;
+                saveState();
+                updateScene();
+            });
+
+            document.getElementById('section-toggle').addEventListener('click', () => {
+                state.sectionView = !state.sectionView;
+                saveState();
+                updateScene();
+            });
+
+            document.getElementById('inspection-toggle').addEventListener('click', () => {
+                state.inspectionMode = !state.inspectionMode;
+                state.measureMode = false;
+                saveState();
+                updateScene();
+            });
+
+            document.getElementById('add-annotation').addEventListener('click', () => {
+                const text = document.getElementById('annotation-text').value;
+                if (text) {
+                    state.annotations.push({ text, x: 0, y: state.dimensions.height / 2, z: 0 });
+                    document.getElementById('annotation-text').value = '';
+                    saveState();
+                    updateScene();
+                } else {
+                    showError('Veuillez entrer un texte pour l\'annotation.');
+                }
+            });
+
+            document.getElementById('undo').addEventListener('click', undo);
+            document.getElementById('redo').addEventListener('click', redo);
+
+            document.getElementById('theme-toggle').addEventListener('click', () => {
+                const body = document.body;
+                body.classList.toggle('light');
+                body.classList.toggle('dark');
+                document.getElementById('theme-toggle').textContent = body.classList.contains('dark') ? '☀️' : '🌙';
+            });
+
+            // Mesures et annotations déplaçables
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            canvas.addEventListener('mousedown', (event) => {
+                mouse.x = (event.offsetX / canvas.clientWidth) * 2 - 1;
+                mouse.y = -(event.offsetY / canvas.clientHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(scene.children, true);
+                if (intersects.length > 0) {
+                    if (state.measureMode) {
+                        measurePoints.push(intersects[0].point);
+                        if (measurePoints.length === 2) {
+                            const distance = measurePoints[0].distanceTo(measurePoints[1]);
+                            measurements.push(distance);
+                            measurePoints = [];
+                            saveState();
+                            updateScene();
+                        }
+                    } else if (intersects[0].object.type === 'Sprite') {
+                        selectedAnnotation = intersects[0].object;
+                    } else if (state.inspectionMode && intersects[0].object.userData.type) {
+                        alert(`Caisse #${intersects[0].object.userData.index + 1}: ${intersects[0].object.userData.type === 'fruits' ? 'Fruits' : 'Légumes'}`);
+                    }
+                }
+            });
+
+            canvas.addEventListener('mousemove', (event) => {
+                if (selectedAnnotation) {
+                    mouse.x = (event.offsetX / canvas.clientWidth) * 2 - 1;
+                    mouse.y = -(event.offsetY / canvas.clientHeight) * 2 + 1;
+                    raycaster.setFromCamera(mouse, camera);
+                    const intersects = raycaster.intersectObjects(scene.children, true);
+                    if (intersects.length > 0) {
+                        state.annotations[selectedAnnotation.userData.index].x = intersects[0].point.x;
+                        state.annotations[selectedAnnotation.userData.index].y = intersects[0].point.y + 0.5;
+                        state.annotations[selectedAnnotation.userData.index].z = intersects[0].point.z;
+                        updateScene();
+                    }
+                }
+            });
+
+            canvas.addEventListener('mouseup', () => {
+                if (selectedAnnotation) {
+                    saveState();
+                    selectedAnnotation = null;
+                }
+            });
+
+            // Contrôles caméra
+            document.getElementById('camera-slider').addEventListener('input', (e) => {
+                const angle = THREE.MathUtils.degToRad(parseFloat(e.target.value));
+                camera.position.x = 30 * Math.sin(angle);
+                camera.position.z = 30 * Math.cos(angle);
+                camera.lookAt(0, 0, 0);
+            });
+
+            document.getElementById('rotate-left').addEventListener('click', () => {
+                camera.position.x = camera.position.x * Math.cos(0.1) - camera.position.z * Math.sin(0.1);
+                camera.position.z = camera.position.x * Math.sin(0.1) + camera.position.z * Math.cos(0.1);
+                camera.lookAt(0, 0, 0);
+            });
+
+            document.getElementById('rotate-right').addEventListener('click', () => {
+                camera.position.x = camera.position.x * Math.cos(-0.1) - camera.position.z * Math.sin(-0.1);
+                camera.position.z = camera.position.x * Math.sin(-0.1) + camera.position.z * Math.cos(-0.1);
+                camera.lookAt(0, 0, 0);
+            });
+
+            document.getElementById('zoom-in').addEventListener('click', () => {
+                camera.position.multiplyScalar(0.9);
+            });
+
+            document.getElementById('zoom-out').addEventListener('click', () => {
+                camera.position.multiplyScalar(1.1);
+            });
+
+            // Redimensionnement
+            window.addEventListener('resize', () => {
+                camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            });
+
+            // Initialisation
+            camera.position.set(30, 15, 30);
+            saveState();
+            updateScene();
+        });
+    </script>
+</body>
+</html>

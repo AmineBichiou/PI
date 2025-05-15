@@ -36,9 +36,7 @@ class Stock
 
     private ?\DateTimeInterface $date_sortie = null;
 
-    #[ORM\ManyToMany(targetEntity: Fournisseur::class, mappedBy: 'stocks')]
-    #[Assert\Count(min: 1, minMessage: 'Vous devez sélectionner au moins un fournisseur.')]
-    private Collection $fournisseurs;
+
 
     #[ORM\ManyToMany(targetEntity: Entrepot::class, inversedBy: 'stocks')]
     #[ORM\JoinTable(name: 'stock_entrepot')]
@@ -51,7 +49,6 @@ class Stock
 
     public function __construct()
     {
-        $this->fournisseurs = new ArrayCollection();
         $this->entrepots = new ArrayCollection();
     }
     public function toArray(): array
@@ -103,28 +100,7 @@ class Stock
         return $this;
     }
 
-    public function getFournisseurs(): Collection
-    {
-        return $this->fournisseurs;
-    }
-
-    public function addFournisseur(Fournisseur $fournisseur): self
-    {
-        if (!$this->fournisseurs->contains($fournisseur)) {
-            $this->fournisseurs->add($fournisseur);
-            $fournisseur->addStock($this);
-        }
-        return $this;
-    }
-
-    public function removeFournisseur(Fournisseur $fournisseur): self
-    {
-        if ($this->fournisseurs->removeElement($fournisseur)) {
-            $fournisseur->removeStock($this);
-        }
-        return $this;
-    }
-
+  
     public function getEntrepots(): Collection
     {
         return $this->entrepots;

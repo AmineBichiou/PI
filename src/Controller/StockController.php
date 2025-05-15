@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\Stock;
 use App\Entity\Categorie;
 use App\Entity\Entrepot;
-use App\Entity\Fournisseur;
 use App\Entity\Produit;
 use App\Form\StockType;
 use App\Repository\EntrepotRepository;
@@ -39,16 +38,15 @@ public function index(
     $query = $stockRepository->createQueryBuilder('s')->getQuery();
     $stocks = $paginator->paginate($query, $request->query->getInt('page', 1), 10);
 
-    // Récupérer les catégories, entrepôts et fournisseurs pour les filtres
     $categories = $entityManager->getRepository(Categorie::class)->findAll();
     $entrepots = $entityManager->getRepository(Entrepot::class)->findAll();
-    $fournisseurs = $entityManager->getRepository(Fournisseur::class)->findAll();
+    
 
     return $this->render('stock/index.html.twig', [
         'stocks' => $stocks,
         'categories' => $categories,
         'entrepots' => $entrepots,
-        'fournisseurs' => $fournisseurs,
+        
     ]);
 }
 // src/Controller/StockController.php

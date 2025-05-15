@@ -254,17 +254,7 @@
                         </div>
                     </div>
 
-                    {# Champ Fournisseurs #}
-                    <div class="col-md-6">
-                        {{ form_label(form.fournisseurs, 'Fournisseurs', {'label_attr': {'class': 'form-label'}}) }}
-                        <div class="input-group has-validation">
-                            <span class="input-group-text"><i class="fas fa-truck"></i></span>
-                            {{ form_widget(form.fournisseurs, {'attr': {'class': 'form-control' ~ (form.fournisseurs.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
-                            <div class="invalid-feedback">
-                                {{ form_errors(form.fournisseurs) }}
-                            </div>
-                        </div>
-                    </div>
+                  
 
                     {# Champ Entrepôts #}
                     <div class="col-md-6">
